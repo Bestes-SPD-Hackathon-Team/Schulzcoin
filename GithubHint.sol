@@ -15,6 +15,10 @@ contract GithubHint {
         entries[_content] = Entry(_accountSlashRepo, _commit, msg.sender);
     }
 
+    function hintURL(bytes32 _content, string _url) when_edit_allowed(_content) {
+        entries[_content] = Entry(_url, 0, msg.sender);
+    }
+
     function unhint(bytes32 _content) when_edit_allowed(_content) {
         delete entries[_content];
     }
