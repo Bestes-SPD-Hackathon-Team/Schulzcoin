@@ -5,7 +5,7 @@ A bin for all the contracts we do
 
 ### Testnet
 
-#### Registry: `0x8e4e9b13d4b45cb0befc93c3061b1408f67316b2`
+#### Registry `0x8e4e9b13d4b45cb0befc93c3061b1408f67316b2`
 
 Example code:
 ```
@@ -26,7 +26,7 @@ theRegistry.confirmReverse(web3.sha3('gavofyork'), web3.eth.reporter) //sent fro
 theRegistry.reverse(web3.eth.defaultAccount) // returns 'gavofyork'
 ```
 
-#### GithubHint: `0xa464a2c92f310190e10a29d498f711fc23148924`
+#### GithubHint
 
 Example code:
 ```
@@ -37,7 +37,7 @@ theGithubHint.hint('0x0a6ff473dd56cb7663c96826c7aa0353493e6270e0119c40613156d775
 theGithubHint.entries('0x0a6ff473dd56cb7663c96826c7aa0353493e6270e0119c40613156d775ff5a90') // returns an entry.
 ```
 
-#### TokenReg: `0x3379a0960aff3575ce20d2669a4821d3166e9bdb`
+#### TokenReg
 
 Example code:
 ```
@@ -53,7 +53,7 @@ theTokenReg.fromTLA("GAV")[1] // returns '0x79a20ddadf9ea64aab79a9c9d2b9c3775ee3
 theTokenReg.fromAddress("0x79a20ddadf9ea64aab79a9c9d2b9c3775ee340ca")[1] // returns 'GAV'
 ```
 
-#### GavCoin: `0x79a20ddadf9ea64aab79a9c9d2b9c3775ee340ca`
+#### GavCoin
 
 Example code:
 ```
