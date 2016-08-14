@@ -67,6 +67,7 @@ web3.eth.sendTransaction({to: theGavCoin.address, value: 100 * 10^15 / 10^6, gas
 +theGavCoin.balanceOf(web3.eth.defaultAccount) // returns 100 * 10^6
 +theGavCoin.price() // returns 2 * 10^15
 +theGavCoin.remaining() // returns 10^9
+// Wait 7 days.
 theGavCoin.refund(10^15, 50 * 10^6, web3.eth.reporter)  // request a refund of 50 at the initial price.
 // Wait for reporter to say transaction is mined.
 +theGavCoin.balanceOf(web3.eth.defaultAccount) // returns 50 * 10^6
