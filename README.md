@@ -45,7 +45,7 @@ var TokenReg = web3.eth.contract([{"constant":true,"inputs":[{"name":"_id","type
 var theTokenReg = TokenReg.at(theRegistry.getAddress(web3.sha3('tokenreg'), 'A'));
 +theTokenReg.fee() // returns 10^18
 +theTokenReg.tokenCount() // returns 0
-tokenreg.register('0x79a20ddadf9ea64aab79a9c9d2b9c3775ee340ca', "GAV", 1000000, "GAVcoin", {value: 1000000000000000000}, web3.eth.reporter );
+theTokenReg.register('0x79a20ddadf9ea64aab79a9c9d2b9c3775ee340ca', "GAV", 1000000, "GAVcoin", {value: 1000000000000000000}, web3.eth.reporter);
 // Wait for reporter to say it's mined.
 +theTokenReg.tokenCount() // returns 1
 +theTokenReg.token(0)[1] // returns ["0x79a20ddadf9ea64aab79a9c9d2b9c3775ee340ca", "GAV", 1000000, "GAVcoin"]
