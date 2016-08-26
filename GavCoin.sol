@@ -1,102 +1,3 @@
-//! GavCoin contract.
-//! By Gav Wood (Ethcore), 2016.
-//! Released under the Apache Licence 2.
-
-contract GavCoin {
-    struct Account {
-        uint balance;
-        mapping (uint => uint) receipt;
-        mapping (address => uint) allowanceOf;
-    }
-    
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-    event Buyin(address indexed buyer, uint indexed price, uint indexed amount);
-    event Refund(address indexed buyer, uint indexed price, uint indexed amount);
-    event NewTranch(uint indexed price);
-    
-    modifier when_owns(address _owner, uint _amount) { if (accounts[_owner].balance < _amount) return; _ }
-    modifier when_has_allowance(address _owner, address _spender, uint _amount) { if (accounts[_owner].allowanceOf[_spender] < _amount) return; _ }
-    
-    function balanceOf(address _who) constant returns (uint) { return accounts[_who].balance; }
-    
-    function transfer(address _to, uint256 _value) when_owns(msg.sender, _value) returns (bool success) {
-        accounts[msg.sender].balance -= _value;
-        accounts[_to].balance += _value;
-    }
-    function transferFrom(address _from, address _to, uint256 _value) when_owns(_from, _value) when_has_allowance(_from, msg.sender, _value) returns (bool success) {
-        accounts[_from].allowanceOf[msg.sender] -= _value;
-        accounts[_from].balance -= _value;
-        accounts[_to].balance += _value;
-        return true;
-    }
-    function approve(address _spender, uint256 _value) returns (bool success) {
-        accounts[msg.sender].allowanceOf[_spender] += _value;
-        return true;
-    }
-    function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
-        return accounts[_owner].allowanceOf[_spender];
-    }
-    
-    /// Simple buyin.
-    function() { buyinInternal(msg.sender, 2 ** 255); }
-
-    /// Extended buyin.
-    function buyin(address _who, uint _maxPrice) { buyinInternal(_who, _maxPrice); }
-
-    modifier when_have_receipt(uint _price, uint _amount) { if (accounts[msg.sender].receipt[_price] < _amount) return; _ }
-
-    function refund(uint _price, uint _amount) when_have_receipt(_price, _amount) returns (bool) {
-        Refund(msg.sender, _price, _amount);
-        accounts[msg.sender].balance -= _amount;
-        accounts[msg.sender].receipt[_price] -= _amount;
-        if (!msg.sender.send(_amount * _price / base))
-            throw;
-        return true;
-    }
-
-    function buyinInternal(address _who, uint _maxPrice) internal {
-        var leftToSpend = msg.value;
-        while (leftToSpend > 0 && price <= _maxPrice) {
-            // How much the remaining tokens of this tranch cost to buy
-            var maxCanSpend = price * remaining;
-            // How much we will spend - the mininum of what's left in the tranch
-            // to buy and what we have remaining
-            var spend = leftToSpend > maxCanSpend ? maxCanSpend : leftToSpend;
-            // The number of tokens we get for spending that
-            var tokens = spend * base / price;
-
-            // Provide tokens and a purchase receipt
-            accounts[msg.sender].balance += tokens;
-            accounts[msg.sender].receipt[price] += tokens;
-            Buyin(msg.sender, price, tokens);
-
-            // Reduce the amounts remaining
-            leftToSpend -= spend;
-            remaining -= tokens;
-            
-            // If this is the end of the tranch...
-            if (remaining == 0) {
-                // ...Increment price and reset remaining
-                price += tranchStep;
-                remaining = tokensPerTranch * base;
-                NewTranch(price);
-            }
-        }
-    }
-    
-    uint public totalSupply;
-    mapping (address => Account) accounts;
-    
-    uint constant base = 1000000;               // tokens are subdivisible by 1000000
-    uint constant tranchStep = 1 finney;        // raise price by 1 finney / tranch
-    uint constant tokensPerTranch = 100;        // 100 tokens per tranch
-    uint public price = 1 finney;               // begin at 1 finney / token
-    uint public remaining = tokensPerTranch * base;
-}
-
-// This implements:
-
 contract Token {
     /// Get the total amount of tokens in the system.
     function totalSupply() constant returns (uint256 total);
@@ -131,4 +32,169 @@ contract Token {
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
+}
+
+contract GavCoin {
+    struct Receipt {
+        uint units;
+        uint32 activation;
+    }
+    struct Account {
+        uint balance;
+        mapping (uint => Receipt) receipt;
+        mapping (address => uint) allowanceOf;
+    }
+    
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event Buyin(address indexed buyer, uint indexed price, uint indexed amount);
+    event Refund(address indexed buyer, uint indexed price, uint indexed amount);
+    event NewTranch(uint indexed price);
+    
+    modifier when_owns(address _owner, uint _amount) { if (accounts[_owner].balance < _amount) return; _ }
+    modifier when_has_allowance(address _owner, address _spender, uint _amount) { if (accounts[_owner].allowanceOf[_spender] < _amount) return; _ }
+    modifier when_have_active_receipt(uint _price, uint _units) { if (accounts[msg.sender].receipt[_price].units < _units || now < accounts[msg.sender].receipt[_price].activation) return; _ }
+
+    function balanceOf(address _who) constant returns (uint) { return accounts[_who].balance; }
+    
+    function transfer(address _to, uint256 _value) when_owns(msg.sender, _value) returns (bool success) {
+        Transfer(msg.sender, _to, _value);
+        accounts[msg.sender].balance -= _value;
+        accounts[_to].balance += _value;
+    }
+    function transferFrom(address _from, address _to, uint256 _value) when_owns(_from, _value) when_has_allowance(_from, msg.sender, _value) returns (bool success) {
+        Transfer(_from, _to, _value);
+        accounts[_from].allowanceOf[msg.sender] -= _value;
+        accounts[_from].balance -= _value;
+        accounts[_to].balance += _value;
+        return true;
+    }
+    function approve(address _spender, uint256 _value) returns (bool success) {
+        Approval(msg.sender, _spender, _value);
+        accounts[msg.sender].allowanceOf[_spender] += _value;
+        return true;
+    }
+    function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
+        return accounts[_owner].allowanceOf[_spender];
+    }
+    
+    /// Simple buyin.
+    function() { buyinInternal(msg.sender, 2 ** 255); }
+
+    /// Extended buyin.
+    function buyin(address _who, uint _maxPrice) { buyinInternal(_who, _maxPrice); }
+
+    function refund(uint _price, uint _units) when_have_active_receipt(_price, _units) when_owns(msg.sender, _units) returns (bool) {
+        Refund(msg.sender, _price, _units);
+        accounts[msg.sender].balance -= _units;
+        totalSupply += _units;
+        accounts[msg.sender].receipt[_price].units -= _units;
+        if (accounts[msg.sender].receipt[_price].units == 0)
+            delete accounts[msg.sender].receipt[_price];
+        if (!msg.sender.send(_units * _price / base))
+            throw;
+        return true;
+    }
+
+    function buyinInternal(address _who, uint _maxPrice) internal {
+        var leftToSpend = msg.value;
+        while (leftToSpend > 0 && price <= _maxPrice) {
+            // How much the remaining tokens of this tranch cost to buy
+            var maxCanSpend = price * remaining / base;
+            // How much we will spend - the mininum of what's left in the tranch
+            // to buy and what we have remaining
+            var spend = leftToSpend > maxCanSpend ? maxCanSpend : leftToSpend;
+            // The number of units we get for spending that
+            var units = spend * base / price;
+
+            // Provide tokens and a purchase receipt
+            accounts[msg.sender].balance += units;
+            accounts[msg.sender].receipt[price].units += units;
+            accounts[msg.sender].receipt[price].activation = uint32(now) + refundActivationPeriod;
+            totalSupply += units;
+            Buyin(msg.sender, price, units);
+
+            // Reduce the amounts remaining
+            leftToSpend -= spend;
+            remaining -= units;
+            
+            // If this is the end of the tranch...
+            if (remaining == 0) {
+                // ...Increment price and reset remaining
+                price += tranchStep;
+                remaining = tokensPerTranch * base;
+                NewTranch(price);
+            }
+        }
+    }
+    
+    uint public totalSupply;
+    mapping (address => Account) accounts;
+    
+    uint constant base = 1000000;               // tokens are subdivisible by 1000000
+    uint constant tranchStep = 1 finney;        // raise price by 1 finney / tranch
+    uint constant tokensPerTranch = 100;        // 100 tokens per tranch
+    uint public price = 1 finney;               // begin at 1 finney / token
+    uint public remaining = tokensPerTranch * base;
+    uint32 constant refundActivationPeriod = 7 days;
+    
+    
+    
+    /// GAMBLING SUBSYSTEM
+/*    
+    struct Bet {
+        uint amount;
+        uint8 odds;
+        uint number;
+    }
+    
+    modifier when_bet(bytes32 _commitment) { if (bets[_commitment].amount == 0) return; }
+    modifier when_no_bet(bytes32 _commitment) { if (bets[_commitment].amount != 0) return; }
+    modifier when_modest(uint _amount, uint8 _odds) { if (_amount * 255 / uint(_odds) > winningsLimitPerBlock) return; }
+
+    event BetPlaced(bytes32 indexed commitment, uint amount, uint8 odds, uint block);
+    event BetCollected(bytes32 indexed commitment, uint winnings);
+    
+    function bet(uint _amount, uint8 _odds, bytes32 _commitment, bytes32 _recycle) when_owns(msg.sender, _amount) when_no_bet(_commitment) when_modest(_amount, _odds) {
+        if (_recycle != 0) {
+            delete bets[sha3(_recycle)];
+        }
+            
+        accounts[msg.sender].balance -= _amount;
+        totalSupply -= _amount;
+        
+        var potentialWinnings = _amount * 255 / _odds;
+        if (currentBettingBlock < block.number + 1) {
+            currentBettingBlock = block.number + 1;
+            currentPotentialWinnings = 0;
+        }
+        else if (currentPotentialWinnings + potentialWinnings > winningsLimitPerBlock) {
+            currentBettingBlock++;
+            currentPotentialWinnings = 0;
+        }
+        currentPotentialWinnings += potentialWinnings;
+        
+        bets[_commitment] = Bet(_amount, _odds, currentBettingBlock);
+        BetPlaced(_commitment, _amount, _odds, currentBettingBlock);
+    }
+    
+    function collect(bytes32 _ticket) when_bet(sha3(_ticket)) {
+        var commitment = sha3(_ticket);
+        Bet b = bets[commitment];
+        delete bets[commitment];
+        if (uint8(block.blockhash(b.number) ^ _ticket) > 255 - b.odds) {
+            uint winnings = b.amount * 255 / b.odds;
+            
+            accounts[msg.sender].balance += winnings;
+            totalSupply += winnings;
+            
+            BetCollected(commitment, winnings);
+        }
+    }
+    
+    mapping (bytes32 => Bet) bets;
+    uint currentBettingBlock = 0;
+    uint currentPotentialWinnings = 0;
+    uint constant winningsLimitPerBlock = 5 ether;
+*/
 }

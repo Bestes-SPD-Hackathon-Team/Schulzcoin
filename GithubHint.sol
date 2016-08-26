@@ -25,4 +25,3 @@ contract GithubHint {
     
     mapping (bytes32 => Entry) public entries;
 }
-
