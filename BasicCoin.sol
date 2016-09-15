@@ -3,6 +3,15 @@ contract TokenEvents {
   event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 }
 
+contract Token is TokenEvents {
+  function totalSupply() constant returns (uint256 total);
+  function balanceOf(address _owner) constant returns (uint256 balance);
+  function transfer(address _to, uint256 _value) returns (bool success);
+  function transferFrom(address _from, address _to, uint256 _value) returns (bool success);
+  function approve(address _spender, uint256 _value) returns (bool success);
+  function allowance(address _owner, address _spender) constant returns (uint256 remaining);
+}
+
 contract Owned {
   event NewOwner(address indexed old, address indexed current);
 
@@ -17,15 +26,6 @@ contract Owned {
     NewOwner(owner, _new);
     owner = _new;
   }
-}
-
-contract Token is TokenEvents {
-  function totalSupply() constant returns (uint256 total);
-  function balanceOf(address _owner) constant returns (uint256 balance);
-  function transfer(address _to, uint256 _value) returns (bool success);
-  function transferFrom(address _from, address _to, uint256 _value) returns (bool success);
-  function approve(address _spender, uint256 _value) returns (bool success);
-  function allowance(address _owner, address _spender) constant returns (uint256 remaining);
 }
 
 contract BasicCoin is Owned, TokenEvents {
@@ -51,8 +51,8 @@ contract BasicCoin is Owned, TokenEvents {
     _
   }
 
-  modifier when_nonzero_value(uint _value) {
-    if (_value == 0) throw;
+  modifier when_nonzero(uint _value) {
+    if (!_value) throw;
     _
   }
 
@@ -62,7 +62,7 @@ contract BasicCoin is Owned, TokenEvents {
 
   mapping (address => Account) accounts;
 
-  function BasicCoin(uint _price, uint _totalSupply) when_nonzero_value(_price) when_nonzero_value(_totalSupply) {
+  function BasicCoin(uint _price, uint _totalSupply) when_nonzero(_price) when_nonzero(_totalSupply) {
     totalSupply = _totalSupply;
     remaining = totalSupply;
     price = _price;
@@ -112,7 +112,7 @@ contract BasicCoin is Owned, TokenEvents {
     return accounts[_owner].allowanceOf[_spender];
   }
 
-  function buyin() when_nonzero_value(remaining) when_msg_value {
+  function buyin() when_nonzero(remaining) when_msg_value {
     var maxSpend = price * remaining;
     var spend = msg.value > maxSpend ? maxSpend : msg.value;
     var units = spend / price;
