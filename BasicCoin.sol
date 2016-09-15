@@ -1,3 +1,7 @@
+//! BasicCoin ECR20-compliant token contract
+//! By Parity Team (Ethcore), 2016.
+//! Released under the Apache Licence 2.
+
 contract TokenEvents {
   event Transfer(address indexed _from, address indexed _to, uint256 _value);
   event Approval(address indexed _owner, address indexed _spender, uint256 _value);
@@ -56,14 +60,16 @@ contract BasicCoin is Owned, TokenEvents {
     _
   }
 
+  uint constant public baseUnit = 1000000;
+
   uint public totalSupply;
   uint public remaining;
   uint public price;
 
   mapping (address => Account) accounts;
 
-  function BasicCoin(uint _price, uint _totalSupply) when_nonzero(_price) when_nonzero(_totalSupply) {
-    totalSupply = _totalSupply;
+  function BasicCoin(uint _price, uint _baseTotalSupply) when_nonzero(_price) when_nonzero(_baseTotalSupply) {
+    totalSupply = _baseTotalSupply / baseUnit;
     remaining = totalSupply;
     price = _price;
   }
@@ -72,12 +78,6 @@ contract BasicCoin is Owned, TokenEvents {
     if (!msg.sender.send(this.balance)) {
       throw;
     }
-  }
-
-  function setPrice(uint _price) only_owner returns (uint) {
-    price = _price < minPrice ? minPrice : _price;
-
-    return price;
   }
 
   function balanceOf(address _who) constant returns (uint) {
@@ -113,9 +113,9 @@ contract BasicCoin is Owned, TokenEvents {
   }
 
   function buyin() when_nonzero(remaining) when_msg_value {
-    var maxSpend = price * remaining;
+    var maxSpend = price * remaining / baseUnit;
     var spend = msg.value > maxSpend ? maxSpend : msg.value;
-    var units = spend / price;
+    var units = spend * baseUnit / price;
 
     Buyin(msg.sender, price, units);
     remaining -= units;
