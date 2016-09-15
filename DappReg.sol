@@ -22,6 +22,7 @@ contract DappReg is Owned {
   struct Dapp {
     bytes32 uniqId; // when we register, grab the manifest Id, if 0 entry invalid/deleted
     bytes32 manifest;
+    uint32 priority;
     address owner;
     mapping (bytes32 => bytes32) meta;
   }
@@ -42,7 +43,7 @@ contract DappReg is Owned {
   }
 
   modifier when_uniqid_free(bytes32 _uniqId) {
-    if (mapFromUniqId[_uniqId] != 0) throw;
+    if (mapUniqId[_uniqId] != 0) throw;
     _
   }
 
@@ -54,17 +55,20 @@ contract DappReg is Owned {
   event Registered(bytes32 indexed uniqId, uint indexed id);
   event Unregistered(bytes32 indexed uniqId, uint indexed id);
   event MetaChanged(bytes32 indexed uniqId, uint indexed id, bytes32 indexed key, bytes32 value);
+  event Prioritized(bytes32 indexed uniqId, uint indexed id, uint priority);
 
   Dapp[] dapps;
-  mapping (bytes32 => uint) mapFromUniqId;
+  mapping (bytes32 => uint) mapUniqId;
 
   uint public open = 0;
   uint public fee = 1 ether;
 
+  uint constant BASE_PRIORITY = 50;
+
   function register(bytes32 _manifest) when_public when_fee_paid when_uniqid_free(_manifest) {
     var id = dapps.length;
-    dapps.push(Dapp(_manifest, _manifest, msg.sender));
-    mapFromUniqId[_manifest] = dapps.length;
+    dapps.push(Dapp(_manifest, _manifest, BASE_PRIORITY, msg.sender));
+    mapUniqId[_manifest] = dapps.length;
     Registered(_manifest, id);
   }
 
@@ -85,18 +89,26 @@ contract DappReg is Owned {
     return dapps.length;
   }
 
-  function dapp(uint _id) constant returns (bytes32 uniqId, bytes32 manifest, address owner) {
+  function dapp(uint _id) constant returns (bytes32 uniqId, bytes32 manifest, uint priority, address owner) {
     var d = dapps[_id];
     uniqId = d.uniqId;
     manifest = d.manifest;
+    priority = d.priority;
     owner = d.owner;
   }
 
-  function fromUniqId(bytes32 _uniqId) constant returns (bytes32 uniqId, bytes32 manifest, address owner) {
-    var d = dapps[mapFromUniqId[_uniqId] - 1];
+  function fromUniqId(bytes32 _uniqId) constant returns (bytes32 uniqId, bytes32 manifest, uint priority, address owner) {
+    var d = dapps[mapUniqId[_uniqId] - 1];
     uniqId = d.uniqId;
     manifest = d.manifest;
+    priority = d.priority;
     owner = d.owner;
+  }
+
+  function setPriority(uint _id, uint _priority) only_owner {
+    var d = dapps[_id];
+    d.priority = _priority;
+    Prioritized(d.uniqId, _id, _priority);
   }
 
   function setManifest(uint _id, bytes32 _manifest) only_dapp_owner(_id) {
