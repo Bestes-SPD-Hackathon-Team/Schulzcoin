@@ -60,7 +60,7 @@ contract BasicCoin is Owned, TokenEvents {
     _
   }
 
-  uint constant public baseUnit = 1000000;
+  uint constant public base = 1000000;
 
   uint public totalSupply;
   uint public remaining;
@@ -69,7 +69,7 @@ contract BasicCoin is Owned, TokenEvents {
   mapping (address => Account) accounts;
 
   function BasicCoin(uint _price, uint _baseTotalSupply) when_nonzero(_price) when_nonzero(_baseTotalSupply) {
-    totalSupply = _baseTotalSupply / baseUnit;
+    totalSupply = _baseTotalSupply / base;
     remaining = totalSupply;
     price = _price;
   }
@@ -113,9 +113,9 @@ contract BasicCoin is Owned, TokenEvents {
   }
 
   function buyin() when_nonzero(remaining) when_msg_value {
-    var maxSpend = price * remaining / baseUnit;
+    var maxSpend = price * remaining / base;
     var spend = msg.value > maxSpend ? maxSpend : msg.value;
-    var units = spend * baseUnit / price;
+    var units = spend * base / price;
 
     Buyin(msg.sender, price, units);
     remaining -= units;
