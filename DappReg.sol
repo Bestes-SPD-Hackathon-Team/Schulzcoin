@@ -66,7 +66,7 @@ contract DappReg is Owned {
   event ManifestChanged(bytes32 indexed uniqId, bytes32 manifest);
   event MetaChanged(bytes32 indexed uniqId, bytes32 indexed key, bytes32 value);
   event OwnerChanged(bytes32 indexed uniqId, address indexed owner);
-  event Prioritized(bytes32 indexed uniqId, uint indexed priority);
+  event PriorityChanged(bytes32 indexed uniqId, uint indexed priority);
   event Registered(bytes32 indexed uniqId, address indexed owner);
   event Unregistered(bytes32 indexed uniqId);
 
@@ -167,7 +167,7 @@ contract DappReg is Owned {
 
   function _setPriority(bytes32 _uniqId, uint _id, uint _priority) private only_owner {
     dapps[_id].priority = _priority;
-    Prioritized(_uniqId, _priority);
+    PriorityChanged(_uniqId, _priority);
   }
 
   // set the registration fee
