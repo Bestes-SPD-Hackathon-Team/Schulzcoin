@@ -22,8 +22,7 @@ contract DappReg is Owned {
   // id       - when we register, we set this from the original repo hash and never change it. The possibility
   //            exists that we need to have other info in other contracts registering this, so we need a global
   //            unique value that is the same across all contracts.
-  // repo     - GithubHint for the actual code. Stored in the structure so that when we iterate through it,
-  //            we need to get to pulling the name, authors, images, etc. at the earliest possible moment
+  // repo     - GithubHint for the actual code
   // priority - Rating will be dealt with in other contracts, however this just gives us a generic way to move
   //            things up or down if need be. Very high values will probably indicate a default feature, i.e. already
   //            visible without user selection, a 0 means it won't show at all (is deleted)
