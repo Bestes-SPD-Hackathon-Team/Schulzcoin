@@ -63,10 +63,12 @@ contract DappReg is Owned {
     _
   }
 
-  event Registered(bytes32 indexed uniqId, uint indexed id);
-  event Unregistered(bytes32 indexed uniqId, uint indexed id);
-  event MetaChanged(bytes32 indexed uniqId, uint indexed id, bytes32 indexed key, bytes32 value);
-  event Prioritized(bytes32 indexed uniqId, uint indexed id, uint priority);
+  event ManifestChanged(bytes32 indexed uniqId, bytes32 manifest);
+  event MetaChanged(bytes32 indexed uniqId, bytes32 indexed key, bytes32 value);
+  event OwnerChanged(bytes32 indexed uniqId, address indexed owner);
+  event Prioritized(bytes32 indexed uniqId, uint indexed priority);
+  event Registered(bytes32 indexed uniqId, address indexed owner);
+  event Unregistered(bytes32 indexed uniqId);
 
   Dapp[] dapps;
 
@@ -75,20 +77,6 @@ contract DappReg is Owned {
   uint public fee = 1 ether;
 
   uint constant BASE_PRIORITY = 100;
-
-  // add apps
-  function register(bytes32 _manifest) when_public when_fee_paid when_uniqid_free(_manifest) {
-    var id = dapps.length;
-    dapps.push(Dapp(_manifest, _manifest, BASE_PRIORITY, msg.sender));
-    uniqIds[_manifest] = dapps.length;
-    Registered(_manifest, id);
-  }
-
-  // remove apps
-  function unregister(uint _id) both_owner_dapp_owner(_id) {
-    Unregistered(dapps[_id].uniqId, _id);
-    dapps[_id].priority = 0;
-  }
 
   // number of apps to iterate through
   function dappCount() constant returns (uint) {
@@ -104,25 +92,72 @@ contract DappReg is Owned {
     owner = d.owner;
   }
 
+  // add apps
+  function register(bytes32 _manifest) when_public when_fee_paid when_uniqid_free(_manifest) {
+    var uniqId = _manifest;
+    var id = dapps.length;
+    dapps.push(Dapp(uniqId, _manifest, BASE_PRIORITY, msg.sender));
+    uniqIds[uniqId] = dapps.length;
+    Registered(uniqId, msg.sender);
+  }
+
+  // remove apps
+  function unregister(bytes32 _uniqId) {
+    _unregister(_uniqId, uniqIds[_uniqId] - 1);
+  }
+
+  function _unregister(bytes32 _uniqId, uint _id) private both_owner_dapp_owner(_id) {
+    dapps[_id].priority = 0;
+    Unregistered(_uniqId);
+  }
+
   // set the actual app manifest.json (GithubHint)
-  function setManifest(uint _id, bytes32 _manifest) only_dapp_owner(_id) {
+  function setManifest(bytes32 _uniqId, bytes32 _manifest) {
+    _setManifest(_uniqId, uniqIds[_uniqId] - 1, _manifest);
+  }
+
+  function _setManifest(bytes32 _uniqId, uint _id, bytes32 _manifest) private only_dapp_owner(_id) {
     dapps[_id].manifest = _manifest;
+    ManifestChanged(_uniqId, _manifest);
   }
 
   // get meta information
-  function meta(uint _id, bytes32 _key) constant returns (bytes32) {
+  function meta(bytes32 _uniqId, bytes32 _key) constant returns (bytes32) {
+    return meta(_uniqId, uniqIds[_uniqId] - 1, _key);
+  }
+
+  function _meta(bytes32 _uniqId, uint _id, bytes32 _key) private constant returns (bytes32) {
     return dapps[_id].meta[_key];
   }
 
   // set meta information
-  function setMeta(uint _id, bytes32 _key, bytes32 _value) only_dapp_owner(_id) {
-    dapps[_id].meta[_key] = _value;
-    MetaChanged(dapps[_id].uniqId, _id, _key, _value);
+  function setMeta(bytes32 _uniqId, bytes32 _key, bytes32 _value) {
+    _setMeta(_uniqId, uniqIds[_uniqId] - 1, _key, _value);
   }
 
-  // map the uniqId to the array index
-  function uniqIdToId(bytes32 _uniqId) constant returns (uint32) {
-    return uniqIds[_uniqId] - 1;
+  function _setMeta(bytes32 _uniqId, uint _id, bytes32 _key, bytes32 _value) private only_dapp_owner(_id) {
+    dapps[_id].meta[_key] = _value;
+    MetaChanged(uniqId, _key, _value);
+  }
+
+  // set the dapp owner
+  function setDappOwner(bytes32 _uniqId, address _owner) {
+    _setDappOwner(_uniqId, uniqIds[_uniqId] - 1, _owner);
+  }
+
+  function setDappOwner(bytes32 _uniqId, uint _id, address _owner) private only_dapp_owner(_id) {
+    dapps[_id].owner = _owner;
+    OwnerChanged(_uniqId, _owner);
+  }
+
+  // set the app priority
+  function setPriority(bytes32 _uniqId, uint _priority) {
+    _setPriority(_uniqId, uniqIds[_uniqId] - 1, _priority);
+  }
+
+  function _setPriority(bytes32 _uniqId, uint _id, uint _priority) private only_owner {
+    dapps[_id].priority = _priority;
+    Prioritized(_uniqId, _priority);
   }
 
   // set the registration fee
@@ -131,15 +166,8 @@ contract DappReg is Owned {
   }
 
   // set the open status (0 = closed)
-  function setOpen(unit _open) only_owner {
+  function setOpen(uint _open) only_owner {
     open = _open;
-  }
-
-  // set the app priority
-  function setPriority(uint _id, uint _priority) only_owner {
-    var d = dapps[_id];
-    d.priority = _priority;
-    Prioritized(d.uniqId, _id, _priority);
   }
 
   // retrieve funds paid
