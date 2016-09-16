@@ -19,10 +19,10 @@ contract Owned {
 }
 
 contract DappReg is Owned {
-  // id       - when we register, we set this from the original manifest and never change it. The possibility
+  // id       - when we register, we set this from the original repo hash and never change it. The possibility
   //            exists that we need to have other info in other contracts registering this, so we need a global
   //            unique value that is the same across all contracts.
-  // manifest - GithubHint of the manifest.json file. Stored in the structure so that when we iterate through it,
+  // repo     - GithubHint for the actual code. Stored in the structure so that when we iterate through it,
   //            we need to get to pulling the name, authors, images, etc. at the earliest possible moment
   // priority - Rating will be dealt with in other contracts, however this just gives us a generic way to move
   //            things up or down if need be. Very high values will probably indicate a default feature, i.e. already
@@ -32,7 +32,7 @@ contract DappReg is Owned {
   //            could cover a lot of these items, but have the extensibility on-hand)
   struct Dapp {
     bytes32 id;
-    bytes32 manifest;
+    bytes32 repo;
     uint priority;
     address owner;
     mapping (bytes32 => bytes32) meta;
@@ -63,10 +63,10 @@ contract DappReg is Owned {
     _
   }
 
-  event ManifestChanged(bytes32 indexed id, bytes32 manifest);
   event MetaChanged(bytes32 indexed id, bytes32 indexed key, bytes32 value);
   event OwnerChanged(bytes32 indexed id, address indexed owner);
   event PriorityChanged(bytes32 indexed id, uint indexed priority);
+  event RepoChanged(bytes32 indexed id, bytes32 repo);
   event Registered(bytes32 indexed id, address indexed owner);
   event Unregistered(bytes32 indexed id);
 
@@ -84,28 +84,28 @@ contract DappReg is Owned {
   }
 
   // a dapp from the list
-  function at(uint _idx) constant returns (bytes32 id, bytes32 manifest, uint priority, address owner) {
+  function at(uint _idx) constant returns (bytes32 id, bytes32 repo, uint priority, address owner) {
     var d = dapps[ids[_idx]];
     id = d.id;
-    manifest = d.manifest;
+    repo = d.repo;
     priority = d.priority;
     owner = d.owner;
   }
 
   // get with the id
-  function get(bytes32 _id) constant returns (bytes32 id, bytes32 manifest, uint priority, address owner) {
+  function get(bytes32 _id) constant returns (bytes32 id, bytes32 repo, uint priority, address owner) {
     var d = dapps[_id];
     id = d.id;
-    manifest = d.manifest;
+    repo = d.repo;
     priority = d.priority;
     owner = d.owner;
   }
 
   // add apps
-  function register(bytes32 _manifest) when_open when_fee_paid when_id_free(_manifest) {
-    dapps[_manifest] = Dapp(_manifest, _manifest, BASE_PRIORITY, msg.sender);
-    ids.push(_manifest);
-    Registered(_manifest, msg.sender);
+  function register(bytes32 _repo) when_open when_fee_paid when_id_free(_repo) {
+    dapps[_repo] = Dapp(_repo, _repo, BASE_PRIORITY, msg.sender);
+    ids.push(_repo);
+    Registered(_repo, msg.sender);
   }
 
   // remove apps
@@ -114,10 +114,10 @@ contract DappReg is Owned {
     Unregistered(_id);
   }
 
-  // set the actual app manifest.json (GithubHint)
-  function setManifest(bytes32 _id, bytes32 _manifest) only_dapp_owner(_id) {
-    dapps[_id].manifest = _manifest;
-    ManifestChanged(_id, _manifest);
+  // set the actual app repo (GithubHint)
+  function setRepo(bytes32 _id, bytes32 _repo) only_dapp_owner(_id) {
+    dapps[_id].repo = _repo;
+    RepoChanged(_id, _repo);
   }
 
   // get meta information
