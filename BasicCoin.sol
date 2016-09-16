@@ -39,26 +39,25 @@ contract BasicCoin is Owned, Token {
     mapping (address => uint) allowanceOf;
   }
 
+  // the balance should be available
   modifier when_owns(address _owner, uint _amount) {
     if (accounts[_owner].balance < _amount) throw;
     _;
   }
 
+  // an allowance should be available
   modifier when_has_allowance(address _owner, address _spender, uint _amount) {
     if (accounts[_owner].allowanceOf[_spender] < _amount) throw;
     _;
   }
 
+  // no ETH should be sent with the transaction
   modifier when_no_eth {
     if (msg.value > 0) throw;
     _;
   }
 
-  modifier when_msg_has_value {
-    if (msg.value == 0) throw;
-    _;
-  }
-
+  // a value should be > 0
   modifier when_non_zero(uint _value) {
     if (_value == 0) throw;
     _;
@@ -66,14 +65,18 @@ contract BasicCoin is Owned, Token {
 
   // the base, tokens denoted in micros
   uint constant public base = 1000000;
+
+  // available token supply
   uint public totalSupply;
+
+  // storage and mapping of all balances & allowances
   mapping (address => Account) accounts;
 
-  // constructor sets the parameters of execution - price/1m & totalSupply
+  // constructor sets the parameters of execution, totalSupply is in full units
   function BasicCoin(uint128 _totalSupply) when_no_eth when_non_zero(_totalSupply) {
     totalSupply = _totalSupply;
-    accounts[msg.sender].balance = _totalSupply;
-    Transfer(this, msg.sender, _totalSupply);
+    accounts[msg.sender].balance = _totalSupply * base;
+    Transfer(this, msg.sender, _totalSupply * base);
   }
 
   // balance of a specific address
