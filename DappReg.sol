@@ -33,7 +33,7 @@ contract DappReg is Owned {
   struct Dapp {
     bytes32 id;
     bytes32 manifest;
-    uint32 priority;
+    uint priority;
     address owner;
     mapping (bytes32 => bytes32) meta;
   }
@@ -53,13 +53,13 @@ contract DappReg is Owned {
     _
   }
 
-  modifier when_id_free(bytes32 id) {
+  modifier when_id_free(bytes32 _id) {
     if (dapps[_id].id != 0) throw;
     _
   }
 
   modifier when_open {
-    if (!open && owner != msg.sender) throw;
+    if (open == 0 && owner != msg.sender) throw;
     _
   }
 
@@ -92,7 +92,7 @@ contract DappReg is Owned {
     owner = d.owner;
   }
 
-  // ... and a get with the id
+  // get with the id
   function get(bytes32 _id) constant returns (bytes32 id, bytes32 manifest, uint priority, address owner) {
     var d = dapps[_id];
     id = d.id;
@@ -102,11 +102,10 @@ contract DappReg is Owned {
   }
 
   // add apps
-  function register(bytes32 _manifest) when_public when_fee_paid when_id_free(_manifest) {
-    var id = _manifest;
-    dapps[id] = Dapp(id, _manifest, BASE_PRIORITY, msg.sender);
-    ids.push(id);
-    Registered(id, msg.sender);
+  function register(bytes32 _manifest) when_open when_fee_paid when_id_free(_manifest) {
+    dapps[_manifest] = Dapp(_manifest, _manifest, BASE_PRIORITY, msg.sender);
+    ids.push(_manifest);
+    Registered(_manifest, msg.sender);
   }
 
   // remove apps
@@ -129,7 +128,7 @@ contract DappReg is Owned {
   // set meta information
   function setMeta(bytes32 _id, bytes32 _key, bytes32 _value) only_dapp_owner(_id) {
     dapps[_id].meta[_key] = _value;
-    MetaChanged(id, _key, _value);
+    MetaChanged(_id, _key, _value);
   }
 
   // set the dapp owner
