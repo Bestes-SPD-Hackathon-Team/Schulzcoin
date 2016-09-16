@@ -92,6 +92,16 @@ contract DappReg is Owned {
     owner = d.owner;
   }
 
+  // ... and a get with the uniqId
+  function get(bytes32 _uniqId) constant returns (bytes32 uniqId, bytes32 manifest, uint priority, address owner) {
+    var id = uniqIds[_uniqId] - 1;
+    var d = dapps[id];
+    uniqId = d.uniqId;
+    manifest = d.manifest;
+    priority = d.priority;
+    owner = d.owner;
+  }
+
   // add apps
   function register(bytes32 _manifest) when_public when_fee_paid when_uniqid_free(_manifest) {
     var uniqId = _manifest;
