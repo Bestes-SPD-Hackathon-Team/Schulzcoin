@@ -124,7 +124,7 @@ contract BasicCoin is Owned, TokenEvents {
     remaining -= units;
     accounts[msg.sender].balance += units;
 
-    // yes, there is an issues here - the very last person will probably overpay for his units
+    // yes, there is an issue here - the very last person will probably overpay for his units
   }
 
   // default goes to buyin
