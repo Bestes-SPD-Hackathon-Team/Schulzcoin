@@ -2,6 +2,8 @@
 //! By Parity Team (Ethcore), 2016.
 //! Released under the Apache Licence 2.
 
+pragma solidity ^0.4.1;
+
 contract TokenEvents {
   event Transfer(address indexed _from, address indexed _to, uint256 _value);
   event Approval(address indexed _owner, address indexed _spender, uint256 _value);
@@ -21,7 +23,7 @@ contract Owned {
 
   modifier only_owner {
     if (msg.sender != owner) throw;
-    _
+    _;
   }
 
   address public owner = msg.sender;
@@ -43,22 +45,22 @@ contract BasicCoin is Owned, TokenEvents {
 
   modifier when_owns(address _owner, uint _amount) {
     if (accounts[_owner].balance < _amount) throw;
-    _
+    _;
   }
 
   modifier when_has_allowance(address _owner, address _spender, uint _amount) {
     if (accounts[_owner].allowanceOf[_spender] < _amount) throw;
-    _
+    _;
   }
 
   modifier when_msg_value {
     if (msg.value == 0) throw;
-    _
+    _;
   }
 
   modifier when_nonzero(uint _value) {
     if (_value == 0) throw;
-    _
+    _;
   }
 
   // the base, tokens denoted in micros
