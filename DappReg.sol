@@ -80,7 +80,7 @@ contract DappReg is Owned {
 
   // a dapp from the list
   function at(uint _idx) constant returns (bytes32 id, bytes32 repo, uint priority, address owner) {
-    var d = dapps[ids[_idx]];
+    Dapp d = dapps[ids[_idx]];
     id = d.id;
     priority = d.priority;
     owner = d.owner;
@@ -88,7 +88,7 @@ contract DappReg is Owned {
 
   // get with the id
   function get(bytes32 _id) constant returns (bytes32 id, bytes32 repo, uint priority, address owner) {
-    var d = dapps[_id];
+    Dapp d = dapps[_id];
     id = d.id;
     priority = d.priority;
     owner = d.owner;
