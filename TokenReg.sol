@@ -35,7 +35,7 @@ contract TokenReg is Owned {
     event MetaChanged(uint indexed id, bytes32 indexed key, bytes32 value);
     event OwnerChanged(uint indexed id, address oldOwner, address newOwner);
 
-    function isAddressFree(address _address) constant returns (bool) {
+    function isAddressFree(address _addr) constant returns (bool) {
       return mapFromAddress[_addr] == 0;
     }
 
