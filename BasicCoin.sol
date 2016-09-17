@@ -241,7 +241,6 @@ contract BasicCoinManager is Owned {
       uint fee = tokenreg.fee();
 
       tokenreg.register.value(fee).gas(msg.gas)(coin, _tla, base, _name);
-      tokenreg.register(coin, _tla, base, _name);
       tokenreg.transferTLA(_tla, msg.sender);
     }
   }
