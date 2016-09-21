@@ -52,7 +52,6 @@ contract DappReg is Owned {
 
   event MetaChanged(bytes32 indexed id, bytes32 indexed key, bytes32 value);
   event OwnerChanged(bytes32 indexed id, address indexed owner);
-  event PriorityChanged(bytes32 indexed id, uint indexed priority);
   event Registered(bytes32 indexed id, address indexed owner);
   event Unregistered(bytes32 indexed id);
 
@@ -67,14 +66,14 @@ contract DappReg is Owned {
   }
 
   // a dapp from the list
-  function at(uint _index) constant returns (bytes32 id, bytes32 repo, address owner) {
+  function at(uint _index) constant returns (bytes32 id, address owner) {
     Dapp d = dapps[ids[_index]];
     id = d.id;
     owner = d.owner;
   }
 
   // get with the id
-  function get(bytes32 _id) constant returns (bytes32 id, bytes32 repo, address owner) {
+  function get(bytes32 _id) constant returns (bytes32 id, address owner) {
     Dapp d = dapps[_id];
     id = d.id;
     owner = d.owner;
