@@ -35,19 +35,12 @@ contract TokenReg is Owned {
     event MetaChanged(uint indexed id, bytes32 indexed key, bytes32 value);
     event OwnerChanged(uint indexed id, address oldOwner, address newOwner);
 
-    function isAddressFree(address _addr) constant returns (bool) {
-      return mapFromAddress[_addr] == 0;
-    }
-
-    function isTLAFree(string _tla) constant returns (bool) {
-      return mapFromTLA[_tla] == 0;
-    }
-
-    function register(address _addr, string _tla, uint _base, string _name) when_fee_paid when_address_free(_addr) when_is_tla(_tla) when_tla_free(_tla) {
+    function register(address _addr, string _tla, uint _base, string _name) when_fee_paid when_address_free(_addr) when_is_tla(_tla) when_tla_free(_tla) returns (bool) {
         tokens.push(Token(_addr, _tla, _base, _name, msg.sender));
         mapFromAddress[_addr] = tokens.length;
         mapFromTLA[_tla] = tokens.length;
         Registered(_tla, tokens.length - 1, _addr, _name);
+        return true;
     }
 
     function unregister(uint _id) only_owner {
@@ -55,16 +48,6 @@ contract TokenReg is Owned {
         delete mapFromAddress[tokens[_id].addr];
         delete mapFromTLA[tokens[_id].tla];
         delete tokens[_id];
-    }
-
-    function transfer(uint _id, address _to) only_token_owner(_id) returns (bool success) {
-        OwnerChanged(_id, tokens[_id].owner, _to);
-        tokens[_id].owner = _to;
-        return true;
-    }
-
-    function transferTLA(string _tla, address _to) when_has_tla(_tla) returns (bool success) {
-        return transfer(mapFromTLA[_tla] - 1, _to);
     }
 
     function setFee(uint _fee) only_owner {
