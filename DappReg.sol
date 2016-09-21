@@ -27,7 +27,6 @@ contract DappReg is Owned {
   struct Dapp {
     bytes32 id;
     address owner;
-    bool deleted;
     mapping (bytes32 => bytes32) meta;
   }
 
@@ -68,31 +67,29 @@ contract DappReg is Owned {
   }
 
   // a dapp from the list
-  function at(uint _index) constant returns (bytes32 id, bytes32 repo, address owner, bool deleted) {
+  function at(uint _index) constant returns (bytes32 id, bytes32 repo, address owner) {
     Dapp d = dapps[ids[_index]];
     id = d.id;
     owner = d.owner;
-    deleted = d.deleted;
   }
 
   // get with the id
-  function get(bytes32 _id) constant returns (bytes32 id, bytes32 repo, address owner, bool deleted) {
+  function get(bytes32 _id) constant returns (bytes32 id, bytes32 repo, address owner) {
     Dapp d = dapps[_id];
     id = d.id;
     owner = d.owner;
-    deleted = d.deleted;
   }
 
   // add apps
   function register(bytes32 _id) when_fee_paid when_id_free(_id) {
     ids.push(_id);
-    dapps[_id] = Dapp(_id, msg.sender, false);
+    dapps[_id] = Dapp(_id, msg.sender);
     Registered(_id, msg.sender);
   }
 
   // remove apps
   function unregister(bytes32 _id) either_owner(_id) {
-    dapps[_id].deleted = true;
+    delete dapps[_id];
     Unregistered(_id);
   }
 
