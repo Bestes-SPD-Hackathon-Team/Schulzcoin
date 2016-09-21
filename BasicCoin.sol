@@ -5,8 +5,8 @@
 pragma solidity ^0.4.1;
 
 contract Token {
-  event Transfer(address indexed _from, address indexed _to, uint256 _value);
-  event Approval(address indexed _owner, address indexed _spender, uint256 _value);
+  event Transfer(address indexed from, address indexed to, uint256 value);
+  event Approval(address indexed owner, address indexed spender, uint256 value);
 
   function totalSupply() constant returns (uint256 total);
   function balanceOf(address _owner) constant returns (uint256 balance);
@@ -73,10 +73,10 @@ contract BasicCoin is Owned, Token {
   mapping (address => Account) accounts;
 
   // constructor sets the parameters of execution, totalSupply is in full units
-  function BasicCoin(uint128 _totalSupply) when_no_eth when_non_zero(_totalSupply) {
-    totalSupply = _totalSupply;
-    accounts[msg.sender].balance = _totalSupply * base;
-    Transfer(this, msg.sender, _totalSupply * base);
+  function BasicCoin(uint128 _initialSupply) when_no_eth when_non_zero(_initialSupply) {
+    totalSupply = _initialSupply * base;
+    accounts[msg.sender].balance = totalSupply;
+    Transfer(this, msg.sender, totalSupply);
   }
 
   // balance of a specific address
