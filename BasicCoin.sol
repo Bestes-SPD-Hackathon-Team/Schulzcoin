@@ -77,7 +77,6 @@ contract BasicCoin is Owned, Token {
     totalSupply = _totalSupply;
     owner = _owner;
     accounts[_owner].balance = totalSupply;
-    Transfer(this, _owner, totalSupply);
   }
 
   // balance of a specific address
