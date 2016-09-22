@@ -72,9 +72,9 @@ contract BasicCoin is Owned, Token {
   // storage and mapping of all balances & allowances
   mapping (address => Account) accounts;
 
-  // constructor sets the parameters of execution, totalSupply is in full units
-  function BasicCoin(uint128 _initialSupply) when_no_eth when_non_zero(_initialSupply) {
-    totalSupply = _initialSupply * base;
+  // constructor sets the parameters of execution, _totalSupply is all units
+  function BasicCoin(uint _totalSupply) when_no_eth when_non_zero(_initialSupply) {
+    totalSupply = _totalSupply;
     accounts[msg.sender].balance = totalSupply;
     Transfer(this, msg.sender, totalSupply);
   }
