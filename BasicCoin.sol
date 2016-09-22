@@ -224,14 +224,12 @@ contract BasicCoinManager is Owned {
   }
 
   // deploy a new BasicCoin on the blockchain, optionally registering it with TokenReg
-  function deploy(uint128 _totalSupply, bool _withTokenreg, string _tla, string _name) {
-    BasicCoin coin = new BasicCoin(_totalSupply);
+  function deploy(uint _totalSupply, bool _withTokenreg, string _tla, string _name) returns (bool) {
+    BasicCoin coin = new BasicCoin(_totalSupply, msg.sender);
     uint base = coin.base();
     uint ownerCount = countByOwner(msg.sender);
 
     Created(msg.sender, coin, _withTokenreg);
-    coin.setOwner(msg.sender);
-    coin.transfer(msg.sender, _totalSupply * base);
     ownedDeployments[msg.sender].length = ownerCount + 1;
     ownedDeployments[msg.sender][ownerCount] = deployments.length;
     deployments.push(Deployed(coin, msg.sender, _withTokenreg));
@@ -240,9 +238,10 @@ contract BasicCoinManager is Owned {
       TokenReg tokenreg = TokenReg(registry.getAddress(tokenregName, 'A'));
       uint fee = tokenreg.fee();
 
-      tokenreg.register.value(fee).gas(msg.gas)(coin, _tla, base, _name);
-      tokenreg.transferTLA(_tla, msg.sender);
+      tokenreg.registerAs.value(fee).gas(msg.gas)(coin, _tla, base, _name, msg.sender);
     }
+
+    return true;
   }
 
   // owner can withdraw all collected funds
