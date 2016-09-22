@@ -34,8 +34,12 @@ contract TokenReg is Owned {
     event Unregistered(string indexed tla, uint indexed id);
     event MetaChanged(uint indexed id, bytes32 indexed key, bytes32 value);
 
-    function register(address _addr, string _tla, uint _base, string _name) when_fee_paid when_address_free(_addr) when_is_tla(_tla) when_tla_free(_tla) returns (bool) {
-        tokens.push(Token(_addr, _tla, _base, _name, msg.sender));
+    function register(address _addr, string _tla, uint _base, string _name) returns (bool) {
+        return registerAs(_addr, _tla, _base, _name, msg.sender);
+    }
+
+    function registerAs(address _addr, string _tla, uint _base, string _name, address _owner) when_fee_paid when_address_free(_addr) when_is_tla(_tla) when_tla_free(_tla) returns (bool) {
+        tokens.push(Token(_addr, _tla, _base, _name, _owner));
         mapFromAddress[_addr] = tokens.length;
         mapFromTLA[_tla] = tokens.length;
         Registered(_tla, tokens.length - 1, _addr, _name);
