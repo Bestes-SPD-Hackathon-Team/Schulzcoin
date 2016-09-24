@@ -29,9 +29,6 @@ contract SignatureReg is Owned {
   // mapping of signatures to entries
   mapping (bytes4 => Entry) public entries;
 
-  // a list of all available signatures
-  bytes4[] public signatures;
-
   // the total count of registered signatures
   uint public totalSignatures = 0;
 
