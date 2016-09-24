@@ -41,8 +41,8 @@ contract SignatureReg is Owned {
     _;
   }
 
-  // dispatched when a new signature => method is registered
-  event Registered(bytes4 signature, string method, address owner);
+  // dispatched when a new signature is registered
+  event Registered(address indexed owner, bytes4 signature, string method);
 
   // constructor with self-registration
   function SignatureReg() {
@@ -60,7 +60,7 @@ contract SignatureReg is Owned {
   function _register(bytes4 _signature, string _method) internal when_unregistered(_signature) returns (bool) {
     entries[_signature] = Entry(_method, msg.sender);
     totalSignatures = totalSignatures + 1;
-    Registered(_signature, _method, msg.sender);
+    Registered(msg.sender, _signature, _method);
     return true;
   }
 
