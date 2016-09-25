@@ -39,13 +39,11 @@ contract SignatureReg is Owned {
   }
 
   // dispatched when a new signature is registered
-  event Registered(address indexed owner, bytes4 signature, string method);
+  event Registered(address indexed owner, bytes4 indexed signature, string method);
 
   // constructor with self-registration
   function SignatureReg() {
     register('register(string)');
-    register('setOwner(address)');
-    register('drain()');
   }
 
   // registers a method mapping
