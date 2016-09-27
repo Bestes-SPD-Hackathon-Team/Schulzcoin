@@ -18,28 +18,20 @@ contract Owned {
 }
 
 contract SignatureReg is Owned {
-  // a signature structure, storing the method name & owner
-  //    method - a human-readable method in the form of "getMethod(bytes32)"
-  //    owner  - the person registering the type
-  struct Entry {
-    string method;
-    address owner;
-  }
-
   // mapping of signatures to entries
-  mapping (bytes4 => Entry) public entries;
+  mapping (bytes4 => string) public entries;
 
   // the total count of registered signatures
   uint public totalSignatures = 0;
 
   // allow only new calls to go in
   modifier when_unregistered(bytes4 _signature) {
-    if (entries[_signature].owner != 0) return;
+    if (bytes(entries[_signature]).length != 0) return;
     _;
   }
 
   // dispatched when a new signature is registered
-  event Registered(address indexed owner, bytes4 indexed signature, string method);
+  event Registered(address indexed creator, bytes4 indexed signature, string method);
 
   // constructor with self-registration
   function SignatureReg() {
@@ -53,17 +45,10 @@ contract SignatureReg is Owned {
 
   // internal register function, signature => method
   function _register(bytes4 _signature, string _method) internal when_unregistered(_signature) returns (bool) {
-    entries[_signature] = Entry(_method, msg.sender);
+    entries[_signature] = _method;
     totalSignatures = totalSignatures + 1;
     Registered(msg.sender, _signature, _method);
     return true;
-  }
-
-  // returns a specific method
-  function get(bytes4 _signature) constant returns (string method, address owner) {
-    Entry entry = entries[_signature];
-    method = entry.method;
-    owner = entry.owner;
   }
 
   // in the case of any extra funds
