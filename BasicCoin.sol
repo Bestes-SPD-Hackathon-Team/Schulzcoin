@@ -55,9 +55,8 @@ contract Registry {
 
 // TokenReg interface
 contract TokenReg {
-  function isAddressFree(address _address) constant returns (bool);
-  function isTLAFree(string _tla) constant returns (bool);
-  function register(address _addr, string _tla, uint _base, string _name) payable;
+  function register(address _addr, string _tla, uint _base, string _name) payable returns (bool);
+  function registerAs(address _addr, string _tla, uint _base, string _name, address _owner) payable returns (bool);
   function unregister(uint _id);
   function setFee(uint _fee);
   function tokenCount() constant returns (uint);
@@ -114,9 +113,9 @@ contract BasicCoin is Owned, Token {
 
   // constructor sets the parameters of execution, _totalSupply is all units
   function BasicCoin(uint _totalSupply, address _owner) when_no_eth when_non_zero(_totalSupply) {
-    totalSupply = _totalSupply;
+    total = _totalSupply;
     owner = _owner;
-    accounts[_owner].balance = totalSupply;
+    accounts[_owner].balance = total;
   }
 
   // the total supply of coins
@@ -176,13 +175,13 @@ contract BasicCoinManager is Owned {
     bool tokenreg;
   }
 
-  // a new BasicCoin has been created
+  // a new BasicCoin has been deployed
   event Created(address indexed owner, address coin, bool tokenreg);
 
   // a list of all the deployments
   Deployed[] deployments;
 
-  // all addresses for a specific owner
+  // all BasciCoins for a specific owner
   mapping (address => uint[]) ownedDeployments;
 
   // the network registry contract
@@ -193,7 +192,7 @@ contract BasicCoinManager is Owned {
 
   // create the coin creator, storing the network registry
   function BasicCoinManager(address _registryAddress) {
-    registry = Registry(_registryAddress);
+    updateRegistry(_registryAddress);
   }
 
   // return the number of deployments
@@ -202,8 +201,8 @@ contract BasicCoinManager is Owned {
   }
 
   // get a specific deployment
-  function get(uint _idx) constant returns (address coin, address owner) {
-    Deployed deployment = deployments[_idx];
+  function get(uint _index) constant returns (address coin, address owner) {
+    Deployed deployment = deployments[_index];
 
     coin = deployment.coin;
     owner = deployment.owner;
@@ -215,21 +214,21 @@ contract BasicCoinManager is Owned {
   }
 
   // returns a specific index by owner
-  function getByOwner(address _owner, uint _idx) constant returns (address coin, address owner) {
-    uint idx = ownedDeployments[_owner][_idx];
-    Deployed deployment = deployments[idx];
+  function getByOwner(address _owner, uint _index) constant returns (address coin, address owner) {
+    uint index = ownedDeployments[_owner][_index];
+    Deployed deployment = deployments[index];
 
     coin = deployment.coin;
     owner = deployment.owner;
   }
 
   // deploy a new BasicCoin on the blockchain, optionally registering it with TokenReg
-  function deploy(uint _totalSupply, bool _withTokenreg, string _tla, string _name) returns (bool) {
-    BasicCoin coin = new BasicCoin(_totalSupply, msg.sender);
-    uint base = coin.base();
-    uint ownerCount = countByOwner(msg.sender);
-
+  function deploy(uint _totalSupply, bool _withTokenreg, string _tla, string _name) payable returns (bool) {
     Created(msg.sender, coin, _withTokenreg);
+    BasicCoin coin = new BasicCoin(_totalSupply, msg.sender);
+    coin.setOwner(msg.sender);
+
+    uint ownerCount = countByOwner(msg.sender);
     ownedDeployments[msg.sender].length = ownerCount + 1;
     ownedDeployments[msg.sender][ownerCount] = deployments.length;
     deployments.push(Deployed(coin, msg.sender, _withTokenreg));
@@ -237,11 +236,17 @@ contract BasicCoinManager is Owned {
     if (_withTokenreg) {
       TokenReg tokenreg = TokenReg(registry.getAddress(tokenregName, 'A'));
       uint fee = tokenreg.fee();
+      uint base = coin.base();
 
       tokenreg.registerAs.value(fee).gas(msg.gas)(coin, _tla, base, _name, msg.sender);
     }
 
     return true;
+  }
+
+  // updates the registry address
+  function updateRegistry (address _registryAddress) only_owner {
+    registry = Registry(_registryAddress);
   }
 
   // owner can withdraw all collected funds
