@@ -190,6 +190,9 @@ contract BasicCoinManager is Owned {
   // the name of TokenReg
   bytes32 constant tokenregName = sha3('tokenreg');
 
+  // the base, tokens denoted in micros (matches up with BasicCoin above)
+  uint constant public base = 1000000;
+
   // create the coin creator, storing the network registry
   function BasicCoinManager(address _registryAddress) {
     updateRegistry(_registryAddress);
@@ -226,7 +229,6 @@ contract BasicCoinManager is Owned {
   function deploy(uint _totalSupply, bool _withTokenreg, string _tla, string _name) payable returns (bool) {
     Created(msg.sender, coin, _withTokenreg);
     BasicCoin coin = new BasicCoin(_totalSupply, msg.sender);
-    coin.setOwner(msg.sender);
 
     uint ownerCount = countByOwner(msg.sender);
     ownedDeployments[msg.sender].length = ownerCount + 1;
@@ -236,7 +238,6 @@ contract BasicCoinManager is Owned {
     if (_withTokenreg) {
       TokenReg tokenreg = TokenReg(registry.getAddress(tokenregName, 'A'));
       uint fee = tokenreg.fee();
-      uint base = coin.base();
 
       tokenreg.registerAs.value(fee).gas(msg.gas)(coin, _tla, base, _name, msg.sender);
     }
