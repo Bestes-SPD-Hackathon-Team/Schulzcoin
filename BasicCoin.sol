@@ -113,10 +113,10 @@ contract BasicCoin is Owned, Token {
   mapping (address => Account) accounts;
 
   // constructor sets the parameters of execution, _totalSupply is all units
-  function BasicCoin(uint _totalSupply) when_no_eth when_non_zero(_initialSupply) {
+  function BasicCoin(uint _totalSupply, address _owner) when_no_eth when_non_zero(_totalSupply) {
     totalSupply = _totalSupply;
-    accounts[msg.sender].balance = totalSupply;
-    Transfer(this, msg.sender, totalSupply);
+    owner = _owner;
+    accounts[_owner].balance = totalSupply;
   }
 
   // the total supply of coins
