@@ -172,11 +172,13 @@ contract BasicCoinManager is Owned {
   struct Deployed {
     address coin;
     address owner;
+    string tla;
+    string name;
     bool tokenreg;
   }
 
   // a new BasicCoin has been deployed
-  event Created(address indexed owner, address coin, bool tokenreg);
+  event Created(address indexed owner, address coin, string tla, string name, bool tokenreg);
 
   // a list of all the deployments
   Deployed[] deployments;
@@ -204,11 +206,13 @@ contract BasicCoinManager is Owned {
   }
 
   // get a specific deployment
-  function get(uint _index) constant returns (address coin, address owner) {
+  function get(uint _index) constant returns (address coin, address owner, string tla, string name) {
     Deployed deployment = deployments[_index];
 
     coin = deployment.coin;
     owner = deployment.owner;
+    tla = deployment.tla;
+    name = deployment.name;
   }
 
   // returns the number of coins for a specific owner
@@ -217,23 +221,19 @@ contract BasicCoinManager is Owned {
   }
 
   // returns a specific index by owner
-  function getByOwner(address _owner, uint _index) constant returns (address coin, address owner) {
-    uint index = ownedDeployments[_owner][_index];
-    Deployed deployment = deployments[index];
-
-    coin = deployment.coin;
-    owner = deployment.owner;
+  function getByOwner(address _owner, uint _index) constant returns (address coin, address owner, string tla, string name) {
+    return get(ownedDeployments[_owner][_index]);
   }
 
   // deploy a new BasicCoin on the blockchain, optionally registering it with TokenReg
-  function deploy(uint _totalSupply, bool _withTokenreg, string _tla, string _name) payable returns (bool) {
-    Created(msg.sender, coin, _withTokenreg);
+  function deploy(uint _totalSupply, string _tla, string _name, bool _withTokenreg) payable returns (bool) {
+    Created(msg.sender, coin, _tla, _name, _withTokenreg);
     BasicCoin coin = new BasicCoin(_totalSupply, msg.sender);
 
     uint ownerCount = countByOwner(msg.sender);
     ownedDeployments[msg.sender].length = ownerCount + 1;
     ownedDeployments[msg.sender][ownerCount] = deployments.length;
-    deployments.push(Deployed(coin, msg.sender, _withTokenreg));
+    deployments.push(Deployed(coin, msg.sender, _tla, _name, _withTokenreg));
 
     if (_withTokenreg) {
       TokenReg tokenreg = TokenReg(registry.getAddress(tokenregName, 'A'));
