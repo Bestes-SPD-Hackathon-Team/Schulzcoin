@@ -34,25 +34,6 @@ contract Owned {
   }
 }
 
-// Network Registry interface
-contract Registry {
-  function reserve(bytes32 _name) returns (bool success);
-  function transfer(bytes32 _name, address _to) returns (bool success);
-  function drop(bytes32 _name) returns (bool success);
-  function set(bytes32 _name, string _key, bytes32 _value) returns (bool success);
-  function setAddress(bytes32 _name, string _key, address _value) returns (bool success);
-  function setUint(bytes32 _name, string _key, uint _value) returns (bool success);
-  function reserved(bytes32 _name) constant returns (bool reserved);
-  function get(bytes32 _name, string _key) constant returns (bytes32);
-  function getAddress(bytes32 _name, string _key) constant returns (address);
-  function getUint(bytes32 _name, string _key) constant returns (uint);
-  function proposeReverse(string _name, address _who) returns (bool success);
-  function confirmReverse(string _name) returns (bool success);
-  function removeReverse();
-  function setFee(uint _amount);
-  function drain();
-}
-
 // TokenReg interface
 contract TokenReg {
   function register(address _addr, string _tla, uint _base, string _name) payable returns (bool);
