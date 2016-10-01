@@ -178,13 +178,13 @@ contract BasicCoinManager is Owned {
   // a new BasicCoin has been deployed
   event Created(address indexed owner, address indexed tokenreg, address coin, string tla, string name);
 
-  // a list of all the deployed coins
+  // a list of all the deployed BasicCoins
   Coin[] coins;
 
-  // all BasciCoins for a specific owner
+  // all BasicCoins for a specific owner
   mapping (address => uint[]) ownedCoins;
 
-  // the base, tokens denoted in micros (matches up with BasicCoin above)
+  // the base, tokens denoted in micros (matches up with BasicCoin interface above)
   uint constant public base = 1000000;
 
   // return the number of deployed
