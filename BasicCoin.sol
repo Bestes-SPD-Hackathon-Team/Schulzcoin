@@ -192,7 +192,7 @@ contract BasicCoinManager is Owned {
     return get(ownedCoins[_owner][_index]);
   }
 
-  // deploy a new BasicCoin on the blockchain, optionally registering it with TokenReg
+  // deploy a new BasicCoin on the blockchain
   function deploy(uint _totalSupply, string _tla, string _name, address _tokenreg) payable returns (bool) {
     TokenReg tokenreg = TokenReg(_tokenreg);
     BasicCoin coin = new BasicCoin(_totalSupply, msg.sender);
