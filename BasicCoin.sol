@@ -169,7 +169,7 @@ contract BasicCoin is Owned, Token {
 // Manages BasicCoin instances, including the deployment & registration
 contract BasicCoinManager is Owned {
   // a structure wrapping a deployed BasicCoin
-  struct Deployed {
+  struct Coin {
     address coin;
     address owner;
     address tokenreg;
@@ -178,72 +178,53 @@ contract BasicCoinManager is Owned {
   // a new BasicCoin has been deployed
   event Created(address indexed owner, address indexed tokenreg, address coin, string tla, string name);
 
-  // a list of all the deployments
-  Deployed[] deployments;
+  // a list of all the deployed coins
+  Coin[] coins;
 
   // all BasciCoins for a specific owner
-  mapping (address => uint[]) ownedDeployments;
-
-  // the network registry contract
-  Registry registry;
-
-  // the name of TokenReg
-  bytes32 constant tokenregName = sha3('tokenreg');
-
-  // the name of the BasicCoin-specific TokenReg
-  bytes32 constant basiccoinregName= sha3('basiccoinregistry');
+  mapping (address => uint[]) ownedCoins;
 
   // the base, tokens denoted in micros (matches up with BasicCoin above)
   uint constant public base = 1000000;
 
-  // create the coin creator, storing the network registry
-  function BasicCoinManager(address _registryAddress) {
-    updateRegistry(_registryAddress);
-  }
-
-  // return the number of deployments
+  // return the number of deployed
   function count() constant returns (uint) {
-    return deployments.length;
+    return coins.length;
   }
 
   // get a specific deployment
-  function get(uint _index) constant returns (address coin, address owner) {
-    Deployed deployment = deployments[_index];
+  function get(uint _index) constant returns (address coin, address owner, address tokenreg) {
+    Coin c = coins[_index];
 
-    coin = deployment.coin;
-    owner = deployment.owner;
+    coin = c.coin;
+    owner = c.owner;
+    tokenreg = c.tokenreg;
   }
 
   // returns the number of coins for a specific owner
   function countByOwner(address _owner) constant returns (uint) {
-    return ownedDeployments[_owner].length;
+    return ownedCoins[_owner].length;
   }
 
   // returns a specific index by owner
-  function getByOwner(address _owner, uint _index) constant returns (address coin, address owner) {
-    return get(ownedDeployments[_owner][_index]);
+  function getByOwner(address _owner, uint _index) constant returns (address coin, address owner, address tokenreg) {
+    return get(ownedCoins[_owner][_index]);
   }
 
   // deploy a new BasicCoin on the blockchain, optionally registering it with TokenReg
-  function deploy(uint _totalSupply, string _tla, string _name, bool _withTokenreg) payable returns (bool) {
+  function deploy(uint _totalSupply, string _tla, string _name, address _tokenreg) payable returns (bool) {
+    TokenReg tokenreg = TokenReg(_tokenreg);
     BasicCoin coin = new BasicCoin(_totalSupply, msg.sender);
-
-    TokenReg tokenreg = TokenReg(registry.getAddress(_withTokenreg ? tokenregName : basiccoinregName, 'A'));
-    tokenreg.registerAs.value(tokenreg.fee()).gas(msg.gas)(coin, _tla, base, _name, msg.sender);
-
     uint ownerCount = countByOwner(msg.sender);
-    ownedDeployments[msg.sender].length = ownerCount + 1;
-    ownedDeployments[msg.sender][ownerCount] = deployments.length;
-    deployments.push(Deployed(coin, msg.sender, tokenreg));
+
+    tokenreg.registerAs.value(tokenreg.fee()).gas(msg.gas)(coin, _tla, base, _name, msg.sender);
+    ownedCoins[msg.sender].length = ownerCount + 1;
+    ownedCoins[msg.sender][ownerCount] = coins.length;
+    coins.push(Coin(coin, msg.sender, tokenreg));
 
     Created(msg.sender, tokenreg, coin, _tla, _name);
 
     return true;
-  }
-
-  // updates the registry address
-  function updateRegistry (address _registryAddress) only_owner {
-    registry = Registry(_registryAddress);
   }
 
   // owner can withdraw all collected funds
