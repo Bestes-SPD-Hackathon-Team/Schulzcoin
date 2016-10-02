@@ -196,12 +196,14 @@ contract BasicCoinManager is Owned {
   function deploy(uint _totalSupply, string _tla, string _name, address _tokenreg) payable returns (bool) {
     TokenReg tokenreg = TokenReg(_tokenreg);
     BasicCoin coin = new BasicCoin(_totalSupply, msg.sender);
-    uint ownerCount = countByOwner(msg.sender);
 
-    tokenreg.registerAs.value(tokenreg.fee()).gas(msg.gas)(coin, _tla, base, _name, msg.sender);
+    uint ownerCount = countByOwner(msg.sender);
+    uint fee = tokenreg.fee();
+
     ownedCoins[msg.sender].length = ownerCount + 1;
     ownedCoins[msg.sender][ownerCount] = coins.length;
     coins.push(Coin(coin, msg.sender, tokenreg));
+    tokenreg.registerAs.value(fee)(coin, _tla, base, _name, msg.sender);
 
     Created(msg.sender, tokenreg, coin, _tla, _name);
 
