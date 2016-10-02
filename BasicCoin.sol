@@ -157,7 +157,7 @@ contract BasicCoinManager is Owned {
   }
 
   // a new BasicCoin has been deployed
-  event Created(address indexed owner, address indexed tokenreg, address coin, string tla, string name);
+  event Created(address indexed owner, address indexed tokenreg, address indexed coin);
 
   // a list of all the deployed BasicCoins
   Coin[] coins;
@@ -205,7 +205,7 @@ contract BasicCoinManager is Owned {
     coins.push(Coin(coin, msg.sender, tokenreg));
     tokenreg.registerAs.value(fee)(coin, _tla, base, _name, msg.sender);
 
-    Created(msg.sender, tokenreg, coin, _tla, _name);
+    Created(msg.sender, tokenreg, coin);
 
     return true;
   }
