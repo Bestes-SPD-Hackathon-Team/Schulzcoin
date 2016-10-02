@@ -38,6 +38,8 @@ contract Owned {
 contract TokenReg {
   function register(address _addr, string _tla, uint _base, string _name) payable returns (bool);
   function registerAs(address _addr, string _tla, uint _base, string _name, address _owner) payable returns (bool);
+  function registerWithMeta(address _addr, string _tla, uint _base, string _name, bytes32 _key, bytes32 _value) payable returns (bool);
+  function registerAsWithMeta(address _addr, string _tla, uint _base, string _name, bytes32 _key, bytes32 _value, address _owner) payable returns (bool);
   function unregister(uint _id);
   function setFee(uint _fee);
   function tokenCount() constant returns (uint);
@@ -157,7 +159,7 @@ contract BasicCoinManager is Owned {
   }
 
   // a new BasicCoin has been deployed
-  event Created(address indexed owner, address indexed tokenreg, address coin, string tla, string name);
+  event Created(address indexed owner, address indexed tokenreg, address indexed coin);
 
   // a list of all the deployed BasicCoins
   Coin[] coins;
@@ -193,7 +195,7 @@ contract BasicCoinManager is Owned {
   }
 
   // deploy a new BasicCoin on the blockchain
-  function deploy(uint _totalSupply, string _tla, string _name, address _tokenreg) payable returns (bool) {
+  function deploy(uint _totalSupply, string _tla, string _name, address _tokenreg, bytes32 _image) payable returns (bool) {
     TokenReg tokenreg = TokenReg(_tokenreg);
     BasicCoin coin = new BasicCoin(_totalSupply, msg.sender);
 
@@ -203,9 +205,9 @@ contract BasicCoinManager is Owned {
     ownedCoins[msg.sender].length = ownerCount + 1;
     ownedCoins[msg.sender][ownerCount] = coins.length;
     coins.push(Coin(coin, msg.sender, tokenreg));
-    tokenreg.registerAs.value(fee)(coin, _tla, base, _name, msg.sender);
+    tokenreg.registerAsWithMeta.value(fee)(coin, _tla, base, _name, bytes32('IMG'), _image, msg.sender);
 
-    Created(msg.sender, tokenreg, coin, _tla, _name);
+    Created(msg.sender, tokenreg, coin);
 
     return true;
   }
