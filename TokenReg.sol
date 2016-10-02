@@ -46,6 +46,17 @@ contract TokenReg is Owned {
         return true;
     }
 
+    function registerWithMeta(address _addr, string _tla, uint _base, string _name, bytes32 _key, bytes32 _value) returns (bool) {
+        return registerAsWithMeta(_addr, _tla, _base, _name, _key, _value, msg.sender);
+    }
+
+    function registerAsWithMeta(address _addr, string _tla, uint _base, string _name, bytes32 _key, bytes32 _value, address _owner) returns (bool) {
+      registerAs(_addr, _tla, _base, _name, _owner);
+      tokens[tokens.length - 1].meta[_key] = _value;
+
+      return true;
+    }
+
     function unregister(uint _id) only_owner {
         Unregistered(tokens[_id].tla, _id);
         delete mapFromAddress[tokens[_id].addr];
