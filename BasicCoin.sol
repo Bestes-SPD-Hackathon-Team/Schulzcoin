@@ -9,7 +9,6 @@ contract Token {
   event Transfer(address indexed from, address indexed to, uint256 value);
   event Approval(address indexed owner, address indexed spender, uint256 value);
 
-  function totalSupply() constant returns (uint256 total);
   function balanceOf(address _owner) constant returns (uint256 balance);
   function transfer(address _to, uint256 _value) returns (bool success);
   function transferFrom(address _from, address _to, uint256 _value) returns (bool success);
@@ -87,30 +86,25 @@ contract BasicCoin is Owned, Token {
   uint constant public base = 1000000;
 
   // available token supply
-  uint total;
+  uint public totalSupply;
 
   // storage and mapping of all balances & allowances
   mapping (address => Account) accounts;
 
   // constructor sets the parameters of execution, _totalSupply is all units
   function BasicCoin(uint _totalSupply, address _owner) when_no_eth when_non_zero(_totalSupply) {
-    total = _totalSupply;
+    totalSupply = _totalSupply;
     owner = _owner;
-    accounts[_owner].balance = total;
-  }
-
-  // the total supply of coins
-  function totalSupply() constant returns (uint256 total) {
-    return total;
+    accounts[_owner].balance = totalSupply;
   }
 
   // balance of a specific address
-  function balanceOf(address _who) constant returns (uint256 balance) {
+  function balanceOf(address _who) constant returns (uint256) {
     return accounts[_who].balance;
   }
 
   // transfer
-  function transfer(address _to, uint256 _value) when_no_eth when_owns(msg.sender, _value) returns (bool success) {
+  function transfer(address _to, uint256 _value) when_no_eth when_owns(msg.sender, _value) returns (bool) {
     Transfer(msg.sender, _to, _value);
     accounts[msg.sender].balance -= _value;
     accounts[_to].balance += _value;
@@ -119,7 +113,7 @@ contract BasicCoin is Owned, Token {
   }
 
   // transfer via allowance
-  function transferFrom(address _from, address _to, uint256 _value) when_no_eth when_owns(_from, _value) when_has_allowance(_from, msg.sender, _value) returns (bool success) {
+  function transferFrom(address _from, address _to, uint256 _value) when_no_eth when_owns(_from, _value) when_has_allowance(_from, msg.sender, _value) returns (bool) {
     Transfer(_from, _to, _value);
     accounts[_from].allowanceOf[msg.sender] -= _value;
     accounts[_from].balance -= _value;
@@ -129,7 +123,7 @@ contract BasicCoin is Owned, Token {
   }
 
   // approve allowances
-  function approve(address _spender, uint256 _value) when_no_eth returns (bool success) {
+  function approve(address _spender, uint256 _value) when_no_eth returns (bool) {
     Approval(msg.sender, _spender, _value);
     accounts[msg.sender].allowanceOf[_spender] += _value;
 
@@ -137,7 +131,7 @@ contract BasicCoin is Owned, Token {
   }
 
   // available allowance
-  function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
+  function allowance(address _owner, address _spender) constant returns (uint256) {
     return accounts[_owner].allowanceOf[_spender];
   }
 
