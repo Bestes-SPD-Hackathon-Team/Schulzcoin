@@ -74,6 +74,9 @@ contract Registry is Owned {
     (bytes32 _name, string _key) constant returns (bytes32) {
         return entries[_name].data[_key];
     }
+    function getOwner(bytes32 _name) constant returns (address) {
+        return entries[_name].owner;
+    }
     function getAddress(bytes32 _name, string _key) constant returns (address) {
         return address(entries[_name].data[_key]);
     }
