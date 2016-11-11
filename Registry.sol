@@ -25,7 +25,7 @@ contract Registry is Owned {
     event Reserved(bytes32 indexed name, address indexed owner);
     event Transferred(bytes32 indexed name, address indexed oldOwner, address indexed newOwner);
     event Dropped(bytes32 indexed name, address indexed owner);
-    event DataChanged(bytes32 indexed name, address indexed owner, string indexed key);
+    event DataChanged(bytes32 indexed name, address indexed owner, string indexed key, string plainKey);
     event ReverseProposed(string indexed name, address indexed reverse);
     event ReverseConfirmed(string indexed name, address indexed reverse);
     event ReverseRemoved(string indexed name, address indexed reverse);
@@ -53,17 +53,17 @@ contract Registry is Owned {
     
     function set(bytes32 _name, string _key, bytes32 _value) only_owner_of(_name) returns (bool success) {
         entries[_name].data[_key] = _value;
-        DataChanged(_name, msg.sender, _key);
+        DataChanged(_name, msg.sender, _key, _key);
         return true;
     }
     function setAddress(bytes32 _name, string _key, address _value) only_owner_of(_name) returns (bool success) {
         entries[_name].data[_key] = bytes32(_value);
-        DataChanged(_name, msg.sender, _key);
+        DataChanged(_name, msg.sender, _key, _key);
         return true;
     }
     function setUint(bytes32 _name, string _key, uint _value) only_owner_of(_name) returns (bool success) {
         entries[_name].data[_key] = bytes32(_value);
-        DataChanged(_name, msg.sender, _key);
+        DataChanged(_name, msg.sender, _key, _key);
         return true;
     }
     
