@@ -51,44 +51,70 @@ contract Operations {
         uint gas;
     }
     
+    event Received(address indexed from, uint value, bytes data);
+    event TransactionProposed(bytes32 indexed client, bytes32 indexed txid, address indexed to, bytes data, uint value, uint gas);
+    event TransactionConfirmed(bytes32 indexed client, bytes32 indexed txid);
+    event TransactionRejected(bytes32 indexed client, bytes32 indexed txid);
+    event TransactionRelayed(bytes32 indexed txid, bool success);
+    event ForkProposed(bytes32 indexed client, uint32 indexed number, bytes32 indexed name, bytes32 spec);
+    event ForkAcceptedBy(bytes32 indexed client, uint32 indexed number);
+    event ForkRejectedBy(bytes32 indexed client, uint32 indexed number);
+    event ForkRejected(uint32 indexed forkNumber);
+    event ForkRatified(uint32 indexed forkNumber);
+    event ReleaseAdded(bytes32 indexed client, uint32 indexed forkBlock, bytes32 indexed release, uint8 track, uint24 semver);
+    event ChecksumAdded(bytes32 indexed client, bytes32 indexed release, bytes32 indexed platform, bytes32 checksum);
+    event ClientAdded(bytes32 indexed client, address owner);
+    event ClientRemoved(bytes32 indexed client);
+    event ClientOwnerChanged(bytes32 indexed client, address indexed old, address indexed now);
+    event ClientRequiredChanged(bytes32 indexed client, bool now);
+    event OwnerChanged(address old, address now);
+    
     function Operations() {
         clients["par"] = Client(msg.sender, true);
     }
     
+    function() payable { Received(msg.sender, msg.value, msg.data); }
+    
     // Functions for client owners
     
-    function proposeTransaction(bytes32 _txid, address _to, bytes _data, uint _value, uint _gas) only_required_client_owner only_when_no_proxy(_txid) {
+    function proposeTransaction(bytes32 _txid, address _to, bytes _data, uint _value, uint _gas) only_required_client_owner only_when_no_proxy(_txid) returns (uint txSuccess) {
         var client = owners[msg.sender];
         proxy[_txid] = Transaction(1, _to, _data, _value, _gas);
         proxy[_txid].status[client] = Status.Accepted;
-        checkProxy(_txid);
+        txSuccess = checkProxy(_txid);
+        TransactionProposed(client, _txid, _to, _data, _value, _gas);
     }
     
-    function confirmTransaction(bytes32 _txid) only_required_client_owner only_when_proxy(_txid) only_when_proxy_undecided(_txid) {
+    function confirmTransaction(bytes32 _txid) only_required_client_owner only_when_proxy(_txid) only_when_proxy_undecided(_txid) returns (uint txSuccess) {
         var client = owners[msg.sender];
         proxy[_txid].status[client] = Status.Accepted;
         proxy[_txid].requiredCount += 1;
-        checkProxy(_txid);
+        txSuccess = checkProxy(_txid);
+        TransactionConfirmed(client, _txid);
     }
     
     function rejectTransaction(bytes32 _txid) only_required_client_owner only_when_proxy(_txid) only_when_proxy_undecided(_txid) {
         delete proxy[_txid];
+        TransactionRejected(owners[msg.sender], _txid);
     }
     
     function proposeFork(uint32 _number, bytes32 _name, bytes32 _spec) only_client_owner only_when_none_proposed {
         forks[_number].name = _name;
         forks[_number].spec = _spec;
+        ForkProposed(owners[msg.sender], _number, _name, _spec);
     }
 
     function acceptFork() when_fork only_undecided_client_owner{
         var client = owners[msg.sender];
         forks[proposedFork].status[client] = Status.Accepted;
+        ForkAcceptedBy(client, proposedFork);
         noteAccepted(client);
     }
     
     function rejectFork() only_undecided_client_owner only_unratified {
         var client = owners[msg.sender];
         forks[proposedFork].status[client] = Status.Rejected;
+        ForkRejectedBy(client, proposedFork);
         noteRejected(client);
     }
     
@@ -97,16 +123,19 @@ contract Operations {
         owners[msg.sender] = 0;
         owners[_newOwner] = client;
         clients[client].owner = _newOwner;
+        ClientOwnerChanged(client, msg.sender, _newOwner);
     }
     
     function addRelease(bytes32 _release, uint32 _forkBlock, uint8 _track, uint24 _semver) only_client_owner {
         var client = owners[msg.sender];
         clients[client].release[_release] = Release(_forkBlock, _track, _semver);
+        ReleaseAdded(client, _forkBlock, _release, _track, _semver);
     }
     
     function addChecksum(bytes32 _release, bytes32 _platform, bytes32 _checksum) only_client_owner {
         var client = owners[msg.sender];
         clients[client].build[_checksum] = Build(_release, _platform);
+        ChecksumAdded(client, _release, _platform, _checksum);
     }
     
     // Admin functions
@@ -114,27 +143,33 @@ contract Operations {
     function addClient(bytes32 _client, address _owner) only_owner {
         clients[_client].owner = _owner;
         owners[_owner] = _client;
+        ClientAdded(_client, _owner);
     }
     
     function removeClient(bytes32 _client) only_owner {
         setClientRequired(_client, false);
         resetClientOwner(_client, 0);
         delete clients[_client];
+        ClientRemoved(_client);
     }
     
     function resetClientOwner(bytes32 _client, address _newOwner) only_owner {
-        owners[clients[_client].owner] = 0;
+        var old = clients[_client].owner;
+        ClientOwnerChanged(_client, old, _newOwner);
+        owners[old] = 0;
         owners[_newOwner] = _client;
         clients[_client].owner = _newOwner;
     }
     
     function setClientRequired(bytes32 _client, bool _r) only_owner when_changing_required(_client, _r) {
+        ClientRequiredChanged(_client, _r);
         clients[_client].required = _r;
         clientsRequired = _r ? clientsRequired + 1 : (clientsRequired - 1);
         checkFork();
     }
     
     function setOwner(address _newOwner) only_owner {
+        OwnerChanged(owner, _newOwner);
         owner = _newOwner;
     }
     
@@ -166,19 +201,23 @@ contract Operations {
     }
     
     function noteRejected(bytes32 _client) internal when_required(_client) {
+        ForkRejected(proposedFork);
         delete forks[proposedFork];
         proposedFork = 0;
     }
     
-    function checkFork() internal when_have_all_required{
+    function checkFork() internal when_have_all_required {
+        ForkRatified(proposedFork);
         forks[proposedFork].ratified = true;
         latestFork = proposedFork;
         proposedFork = 0;
     }
     
-    function checkProxy(bytes32 _txid) internal when_proxy_confirmed(_txid) {
+    function checkProxy(bytes32 _txid) internal when_proxy_confirmed(_txid) returns (uint txSuccess) {
         var tx = proxy[_txid];
-        if (!tx.to.call.value(tx.value).gas(tx.gas)(tx.data)) throw;
+        var success = tx.to.call.value(tx.value).gas(tx.gas)(tx.data);
+        TransactionRelayed(_txid, success);
+        txSuccess = success ? 2 : 1;
         delete proxy[_txid];
     }
     
@@ -219,4 +258,3 @@ contract Operations {
     uint32 public proposedFork;
     address public owner = msg.sender;
 }
-
