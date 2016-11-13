@@ -2,7 +2,7 @@
 // Copyright Parity Technologies Ltd (UK), 2016.
 // This code may be distributed under the terms of the Apache Licence, version 2.
 
-pragma solidity ^0.4;
+//pragma solidity ^0.4;
 
 contract Operations {
     uint8 constant Stable = 0;
@@ -70,10 +70,22 @@ contract Operations {
     event OwnerChanged(address old, address now);
     
     function Operations() {
-        clients["par"] = Client(msg.sender, true);
+        forks[0] = Fork("frontier", sha3("frontier"), true, 0);
+        forks[1150000] = Fork("homestead", sha3("homestead"), true, 0);
+        forks[2463000] = Fork("eip150", sha3("eip150"), true, 0);
+        latestFork = 2463000;
+
+        clients["parity"] = Client(msg.sender, true);
+        owners[msg.sender] = "parity";
+        clientsRequired = 1;
+        
+        clients["parity"].release[0xb14aed734e1f16676b2ec442b1b5a63d86f7bb5d] = Release(2463000, Beta, 0x010402);
+        clients["parity"].current[Beta] = 0xb14aed734e1f16676b2ec442b1b5a63d86f7bb5d;
+        clients["parity"].release[0x080ec8043f41e25ee8aa4ee6112906ac6d82ea74] = Release(2463000, Stable, 0x01030b);
+        clients["parity"].current[Stable] = 0x080ec8043f41e25ee8aa4ee6112906ac6d82ea74;
     }
     
-    function() payable { Received(msg.sender, msg.value, msg.data); }
+    function() /*payable*/ { Received(msg.sender, msg.value, msg.data); }
     
     // Functions for client owners
     
@@ -223,34 +235,33 @@ contract Operations {
     
     // Modifiers
     
-    modifier only_owner { if (owner != msg.sender) throw; _; }
-    modifier only_client_owner { var client = owners[msg.sender]; if (client == 0) throw; _; }
-    modifier only_required_client_owner { var client = owners[msg.sender]; if (!clients[client].required) throw; _; }
-    modifier only_ratified{ if (!forks[proposedFork].ratified) throw; _; }
-    modifier only_unratified { if (!forks[proposedFork].ratified) throw; _; }
+    modifier only_owner { if (owner != msg.sender) throw; _ }
+    modifier only_client_owner { var client = owners[msg.sender]; if (client == 0) throw; _ }
+    modifier only_required_client_owner { var client = owners[msg.sender]; if (!clients[client].required) throw; _ }
+    modifier only_ratified{ if (!forks[proposedFork].ratified) throw; _ }
+    modifier only_unratified { if (!forks[proposedFork].ratified) throw; _ }
     modifier only_undecided_client_owner {
         var client = owners[msg.sender];
         if (client == 0)
             throw;
         if (forks[proposedFork].status[client] != Status.Undecided)
             throw;
-        _;
+        _
     }
-    modifier only_when_none_proposed { if (proposedFork != 0) throw; _; }
-    modifier only_when_proxy(bytes32 _txid) { if (proxy[_txid].requiredCount == 0) throw; _; }
-    modifier only_when_no_proxy(bytes32 _txid) { if (proxy[_txid].requiredCount > 0) throw; _; }
-    modifier only_when_proxy_undecided(bytes32 _txid) { if (proxy[_txid].status[owners[msg.sender]] != Status.Undecided) throw; _; }
+    modifier only_when_none_proposed { if (proposedFork != 0) throw; _ }
+    modifier only_when_proxy(bytes32 _txid) { if (proxy[_txid].requiredCount == 0) throw; _ }
+    modifier only_when_no_proxy(bytes32 _txid) { if (proxy[_txid].requiredCount > 0) throw; _ }
+    modifier only_when_proxy_undecided(bytes32 _txid) { if (proxy[_txid].status[owners[msg.sender]] != Status.Undecided) throw; _ }
     
-    modifier when_fork { if (forks[proposedFork].name == 0) throw; _; }
-    modifier when_required(bytes32 _client) { if (clients[_client].required) _; }
-    modifier when_have_all_required { if (forks[proposedFork].requiredCount >= clientsRequired) _; }
-    modifier when_changing_required(bytes32 _client, bool _r) { if (clients[_client].required != _r) _; }
-    modifier when_proxy_confirmed(bytes32 _txid) { if (proxy[_txid].requiredCount >= clientsRequired) _; }
+    modifier when_fork { if (forks[proposedFork].name == 0) throw; _ }
+    modifier when_required(bytes32 _client) { if (clients[_client].required) _ }
+    modifier when_have_all_required { if (forks[proposedFork].requiredCount >= clientsRequired) _ }
+    modifier when_changing_required(bytes32 _client, bool _r) { if (clients[_client].required != _r) _ }
+    modifier when_proxy_confirmed(bytes32 _txid) { if (proxy[_txid].requiredCount >= clientsRequired) _ }
 
     mapping (uint32 => Fork) public forks;
     mapping (bytes32 => Client) public clients;
     mapping (address => bytes32) public owners;
-    
     mapping (bytes32 => Transaction) public proxy;
     
     uint32 public clientsRequired;
