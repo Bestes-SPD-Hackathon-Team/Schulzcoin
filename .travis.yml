@@ -1,0 +1,19 @@
+sudo: false
+dist: xenial
+cache:
+  apt: true
+
+addons:
+  apt:
+    sources:
+      - sourceline: ppa:ethereum/ethereum-dev
+    packages:
+      - solc
+
+script:
+  - |
+    for file in *.sol; do
+      solc --combined-json abi,bin $file > /dev/null
+      status=$?
+      if [ $status -ne 0 ]; then exit $status; fi
+    done
