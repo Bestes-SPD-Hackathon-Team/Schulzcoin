@@ -2,9 +2,11 @@
 //! By Gav Wood (Ethcore), 2016.
 //! Released under the Apache Licence 2.
 
+pragma solidity ^0.4.0;
+
 // From Owned.sol
 contract Owned {
-    modifier only_owner { if (msg.sender != owner) return; _ }
+    modifier only_owner { if (msg.sender != owner) return; _; }
 
     event NewOwner(address indexed old, address indexed current);
 
@@ -21,12 +23,12 @@ contract BadgeReg is Owned {
         mapping (bytes32 => bytes32) meta;
     }
 
-    modifier when_fee_paid { if (msg.value < fee) return; _ }
-    modifier when_address_free(address _addr) { if (mapFromAddress[_addr] != 0) return; _ }
-    modifier when_name_free(bytes32 _name) { if (mapFromName[_name] != 0) return; _ }
-    modifier when_is_name(bytes32 _name) { if (bytes(_name).length != 3) return; _ }
-    modifier when_has_name(bytes32 _name) { if (mapFromName[_name] == 0) return; _ }
-    modifier only_badge_owner(uint _id) { if (badges[_id].owner != msg.sender) return; _ }
+    modifier when_fee_paid { if (msg.value < fee) return; _; }
+    modifier when_address_free(address _addr) { if (mapFromAddress[_addr] != 0) return; _; }
+    modifier when_name_free(bytes32 _name) { if (mapFromName[_name] != 0) return; _; }
+    modifier when_is_name(bytes32 _name) { if (bytes(_name).length != 3) return; _; }
+    modifier when_has_name(bytes32 _name) { if (mapFromName[_name] == 0) return; _; }
+    modifier only_badge_owner(uint _id) { if (badges[_id].owner != msg.sender) return; _; }
 
     event Registered(bytes32 indexed name, uint indexed id, address addr);
     event Unregistered(bytes32 indexed name, uint indexed id);
