@@ -1,11 +1,11 @@
-sudo: false
+sudo: required
+dist: xenial
 
-addons:
-  apt:
-    sources:
-      - sourceline: 'ppa:ethereum/ethereum-dev'
-    packages:
-      - solc
+install:
+  - sudo apt install -y software-properties-common
+  - sudo add-apt-repository -y 'ppa:ethereum/ethereum-dev'
+  - sudo apt update -qq
+  - sudo apt install -y solc
 
 script:
   - |
