@@ -3,7 +3,7 @@ dist: xenial
 
 install:
   - sudo apt install -y software-properties-common
-  - sudo add-apt-repository -y 'ppa:ethereum/ethereum-dev'
+  - sudo add-apt-repository -y ppa:ethereum/ethereum
   - sudo apt update -qq
   - sudo apt install -y solc
 
