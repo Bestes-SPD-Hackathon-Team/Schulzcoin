@@ -4,7 +4,7 @@
 
 // From Owned.sol
 contract Owned {
-    modifier only_owner { if (msg.sender != owner) return; _ }
+    modifier only_owner { if (msg.sender != owner) return; _; }
 
     event NewOwner(address indexed old, address indexed current);
 
@@ -23,12 +23,12 @@ contract TokenReg is Owned {
         mapping (bytes32 => bytes32) meta;
     }
 
-    modifier when_fee_paid { if (msg.value < fee) return; _ }
-    modifier when_address_free(address _addr) { if (mapFromAddress[_addr] != 0) return; _ }
-    modifier when_tla_free(string _tla) { if (mapFromTLA[_tla] != 0) return; _ }
-    modifier when_is_tla(string _tla) { if (bytes(_tla).length != 3) return; _ }
-    modifier when_has_tla(string _tla) { if (mapFromTLA[_tla] == 0) return; _ }
-    modifier only_token_owner(uint _id) { if (tokens[_id].owner != msg.sender) return; _ }
+    modifier when_fee_paid { if (msg.value < fee) return; _; }
+    modifier when_address_free(address _addr) { if (mapFromAddress[_addr] != 0) return; _; }
+    modifier when_tla_free(string _tla) { if (mapFromTLA[_tla] != 0) return; _; }
+    modifier when_is_tla(string _tla) { if (bytes(_tla).length != 3) return; _; }
+    modifier when_has_tla(string _tla) { if (mapFromTLA[_tla] == 0) return; _; }
+    modifier only_token_owner(uint _id) { if (tokens[_id].owner != msg.sender) return; _; }
 
     event Registered(string indexed tla, uint indexed id, address addr, string name);
     event Unregistered(string indexed tla, uint indexed id);

@@ -81,12 +81,12 @@ contract BasicWallet {
         return now > timeout ? 0 : timeout - now;
     }
 
-    modifier only_owner { if (msg.sender != owner) throw; _ }
-    modifier only_backup { if (msg.sender != backup) throw; _ }
-    modifier only_owner_or_backup { if (msg.sender != backup && msg.sender != owner) throw; _ }
-    modifier only_when_timeout { if (timeout == 0) throw; _ }
-    modifier when_no_timeout { if (timeout == 0) _ }
-    modifier when_timed_out { if (timeout != 0 && now > timeout) _ }
+    modifier only_owner { if (msg.sender != owner) throw; _; }
+    modifier only_backup { if (msg.sender != backup) throw; _; }
+    modifier only_owner_or_backup { if (msg.sender != backup && msg.sender != owner) throw; _; }
+    modifier only_when_timeout { if (timeout == 0) throw; _; }
+    modifier when_no_timeout { if (timeout == 0) _; }
+    modifier when_timed_out { if (timeout != 0 && now > timeout) _; }
 
     address public owner;
     address public backup;
