@@ -26,7 +26,6 @@ contract BadgeReg is Owned {
     modifier when_fee_paid { if (msg.value < fee) return; _; }
     modifier when_address_free(address _addr) { if (mapFromAddress[_addr] != 0) return; _; }
     modifier when_name_free(bytes32 _name) { if (mapFromName[_name] != 0) return; _; }
-    modifier when_is_name(bytes32 _name) { if (bytes(_name).length != 3) return; _; }
     modifier when_has_name(bytes32 _name) { if (mapFromName[_name] == 0) return; _; }
     modifier only_badge_owner(uint _id) { if (badges[_id].owner != msg.sender) return; _; }
 
@@ -38,11 +37,11 @@ contract BadgeReg is Owned {
         return registerAs(_addr, _name, msg.sender);
     }
 
-    function registerAs(address _addr, bytes32 _name, uint _base, bytes32 _name, address _owner) when_fee_paid when_address_free(_addr) when_is_name(_name) when_name_free(_name) returns (bool) {
-        badges.push(Badge(_addr, _name, _base, _name, _owner));
+    function registerAs(address _addr, bytes32 _name, address _owner) when_fee_paid when_address_free(_addr) when_name_free(_name) returns (bool) {
+        badges.push(Badge(_addr, _name, _owner));
         mapFromAddress[_addr] = badges.length;
         mapFromName[_name] = badges.length;
-        Registered(_name, badges.length - 1, _addr, _name);
+        Registered(_name, badges.length - 1, _addr);
         return true;
     }
 
