@@ -9,8 +9,9 @@ install:
 
 script:
   - |
+    status=0
     for file in *.sol; do
       solc --combined-json abi,bin $file > /dev/null
-      status=$?
-      if [ $status -ne 0 ]; then exit $status; fi
+      if [ $? -ne 0 ]; status=1; fi
     done
+    exit $status
