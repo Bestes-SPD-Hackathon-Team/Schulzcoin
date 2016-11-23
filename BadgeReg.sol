@@ -33,11 +33,11 @@ contract BadgeReg is Owned {
     event Unregistered(bytes32 indexed name, uint indexed id);
     event MetaChanged(uint indexed id, bytes32 indexed key, bytes32 value);
 
-    function register(address _addr, bytes32 _name) returns (bool) {
+    function register(address _addr, bytes32 _name) payable returns (bool) {
         return registerAs(_addr, _name, msg.sender);
     }
 
-    function registerAs(address _addr, bytes32 _name, address _owner) when_fee_paid when_address_free(_addr) when_name_free(_name) returns (bool) {
+    function registerAs(address _addr, bytes32 _name, address _owner) payable when_fee_paid when_address_free(_addr) when_name_free(_name) returns (bool) {
         badges.push(Badge(_addr, _name, _owner));
         mapFromAddress[_addr] = badges.length;
         mapFromName[_name] = badges.length;
