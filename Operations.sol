@@ -246,7 +246,7 @@ contract Operations {
             throw;
         if (forks[proposedFork].status[client] != Status.Undecided)
             throw;
-        _
+        _;
     }
     modifier only_when_none_proposed { if (proposedFork != 0) throw; _; }
     modifier only_when_proxy(bytes32 _txid) { if (proxy[_txid].requiredCount == 0) throw; _; }
