@@ -5,7 +5,7 @@
 
 pragma solidity ^0.4;
 
-/// This is intesnded to be used as a basic wallet. It provides the Received event
+/// This is intended to be used as a basic wallet. It provides the Received event
 /// in order to track incoming transactions. It also has one piece of additional
 /// functionality: to nominate a backup owner which can, after a timeout period,
 /// claim ownership over the account.
