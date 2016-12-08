@@ -7,7 +7,7 @@ contract Prism {
     function Prism() {
         forked = theWithdraw.balance > 1 ether;
     }
-    
+
     function transferETC(address to) {
         if (forked)
             throw;
@@ -21,6 +21,6 @@ contract Prism {
         if (!to.send(msg.value))
             throw;
     }
-    
+
     bool public forked;
 }
