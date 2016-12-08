@@ -2,6 +2,8 @@
 //! By Gav Wood (Ethcore), 2016.
 //! Released under the Apache Licence 2.
 
+pragma solidity ^0.4.0;
+
 // From Owned.sol
 contract Owned {
     modifier only_owner { if (msg.sender != owner) return; _; }
@@ -35,7 +37,7 @@ contract Registry is Owned {
     modifier when_proposed(string _name) { if (entries[sha3(_name)].reverse != msg.sender) return; _; }
     modifier when_fee_paid { if (msg.value < fee) return; _; }
 
-    function reserve(bytes32 _name) when_unreserved(_name) when_fee_paid returns (bool success) {
+    function reserve(bytes32 _name) when_unreserved(_name) payable when_fee_paid returns (bool success) {
         entries[_name].owner = msg.sender;
         Reserved(_name, msg.sender);
         return true;

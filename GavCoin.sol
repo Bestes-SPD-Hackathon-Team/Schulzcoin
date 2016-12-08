@@ -1,3 +1,5 @@
+pragma solidity ^0.4.0;
+
 contract Token {
     /// Get the total amount of tokens in the system.
     function totalSupply() constant returns (uint256 total);
@@ -79,10 +81,10 @@ contract GavCoin {
     }
 
     /// Simple buyin.
-    function() { buyinInternal(msg.sender, 2 ** 255); }
+    function() payable { buyinInternal(msg.sender, 2 ** 255); }
 
     /// Extended buyin.
-    function buyin(address _who, uint _maxPrice) { buyinInternal(_who, _maxPrice); }
+    function buyin(address _who, uint _maxPrice) payable { buyinInternal(_who, _maxPrice); }
 
     function refund(uint _price, uint _units) when_have_active_receipt(_price, _units) when_owns(msg.sender, _units) returns (bool) {
         Refund(msg.sender, _price, _units);
