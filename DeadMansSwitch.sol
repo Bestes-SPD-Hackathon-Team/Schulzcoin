@@ -1,15 +1,15 @@
-// BasicWallet contract, by Gavin Wood.
+// DeadMansSwitch contract, by Gavin Wood.
 // Copyright Parity Technologies Ltd (UK), 2016.
 // This code may be distributed under the terms of the Apache Licence, version 2
 // or the MIT Licence, at your choice.
 
-//pragma solidity ^0.4;
+pragma solidity ^0.4;
 
 /// This is intended to be used as a basic wallet. It provides the Received event
 /// in order to track incoming transactions. It also has one piece of additional
 /// functionality: to nominate a backup owner which can, after a timeout period,
 /// claim ownership over the account.
-contract BasicWallet {
+contract DeadMansSwitch {
     event ReclaimBegun();
     event Reclaimed();
     event Sent(address indexed to, uint value, bytes data);
@@ -25,7 +25,7 @@ contract BasicWallet {
         reclaimPeriod = _reclaimPeriod;
     }
 
-    function() /*payable*/ { Received(msg.sender, msg.value, msg.data); }
+    function() payable { Received(msg.sender, msg.value, msg.data); }
 
     // Backup functions
 
