@@ -2,6 +2,8 @@
 //! By Gav Wood (Ethcore), 2016.
 //! Released under the Apache Licence 2.
 
+pragma solidity ^0.4.6;
+
 contract Prism {
     address constant theWithdraw = 0xbf4ed7b27f1d666546e30d74d50d173d20bca754;
     function Prism() {

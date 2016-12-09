@@ -2,7 +2,7 @@
 // Copyright Parity Technologies Ltd (UK), 2016.
 // This code may be distributed under the terms of the Apache Licence, version 2.
 
-//pragma solidity ^0.4;
+pragma solidity ^0.4.6;
 
 contract Operations {
     uint8 constant Stable = 1;
