@@ -49,7 +49,7 @@ contract Certifier {
 	function lookupHash(address _who, string _field) constant returns (bytes32);
 }
 
-contract ProofOfEmail is Owned, Certifier, Registry, ReversibleRegistry {
+contract ProofOfEmail is Owned, Certifier, ReversibleRegistry {
 	// Events.
 	event Requested(address indexed who, bytes32 emailHash);
 	event Puzzled(address indexed who, bytes32 indexed emailHash, bytes32 puzzle);

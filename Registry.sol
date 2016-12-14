@@ -2,6 +2,8 @@
 //! By Gav Wood (Ethcore), 2016.
 //! Released under the Apache Licence 2.
 
+pragma solidity ^0.4.0;
+
 // From Owned.sol
 contract Owned {
 	event NewOwner(address indexed old, address indexed current);
@@ -13,7 +15,7 @@ contract Owned {
 	address public owner = msg.sender;
 }
 
-contract Registry {
+contract MetadataRegistry {
 	event DataChanged(bytes32 indexed name, string indexed key, string plainKey);
 
 	function getData(bytes32 _name, string _key) constant returns (bytes32);
@@ -39,7 +41,7 @@ contract ReversibleRegistry {
 	function reverse(address _data) constant returns (string);
 }
 
-contract SimpleRegistry is Owned, Registry, OwnerRegistry, ReversibleRegistry {
+contract SimpleRegistry is Owned, MetadataRegistry, OwnerRegistry, ReversibleRegistry {
 	struct Entry {
 		address owner;
 		address reverse;
@@ -80,19 +82,22 @@ contract SimpleRegistry is Owned, Registry, OwnerRegistry, ReversibleRegistry {
 	function reverse(address _data) constant returns (string) { return reverses[_data]; }
 
 	// Reservation functions.
-	function reserve(bytes32 _name) when_unreserved(_name) when_fee_paid returns (bool success) {
+	function reserve(bytes32 _name) when_unreserved(_name) when_fee_paid payable returns (bool success) {
 		entries[_name].owner = msg.sender;
 		Reserved(_name, msg.sender);
 		return true;
 	}
+
 	function reserved(bytes32 _name) constant returns (bool reserved) {
 		return entries[_name].owner != 0;
 	}
+
 	function transfer(bytes32 _name, address _to) only_owner_of(_name) returns (bool success) {
 		entries[_name].owner = _to;
 		Transferred(_name, msg.sender, _to);
 		return true;
 	}
+
 	function drop(bytes32 _name) only_owner_of(_name) returns (bool success) {
 		delete entries[_name];
 		Dropped(_name, msg.sender);
@@ -105,11 +110,13 @@ contract SimpleRegistry is Owned, Registry, OwnerRegistry, ReversibleRegistry {
 		DataChanged(_name, _key, _key);
 		return true;
 	}
+
 	function setAddress(bytes32 _name, string _key, address _value) only_owner_of(_name) returns (bool success) {
 		entries[_name].data[_key] = bytes32(_value);
 		DataChanged(_name, _key, _key);
 		return true;
 	}
+
 	function setUint(bytes32 _name, string _key, uint _value) only_owner_of(_name) returns (bool success) {
 		entries[_name].data[_key] = bytes32(_value);
 		DataChanged(_name, _key, _key);

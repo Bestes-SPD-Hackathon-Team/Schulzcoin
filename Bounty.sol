@@ -2,6 +2,8 @@
 //! By Gav Wood (Ethcore), 2016.
 //! Released under the Apache Licence 2.
 
+pragma solidity ^0.4.6;
+
 /// Bounty contract to pay out when an address is compromised. Allows for a
 /// referee to cancel the claim for arbitrary reasons; we assume that the
 /// referee is trustworthy.
@@ -69,7 +71,8 @@ contract Bounty
     function withdraw(uint _amount) only_with_at_least(_amount) when_no_claim {
         Withdrawal(msg.sender, _amount);
         balance[msg.sender] -= _amount;
-        msg.sender.send(_amount);
+        if (!msg.sender.send(_amount))
+            throw;
     }
 
     /// Begin claim process; register `_claimant` as the beneficiary and the
@@ -84,7 +87,8 @@ contract Bounty
     /// and suicides.
     function payout() only_claimant after_payday {
         Payout(claimant, address(this).balance);
-        claimant.send(address(this).balance);
+        if (!claimant.send(address(this).balance))
+            throw;
         suicide(0);
     }
 
@@ -95,4 +99,3 @@ contract Bounty
         claimant = NO_CLAIM;
     }
 }
-
