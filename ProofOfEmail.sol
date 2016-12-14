@@ -16,7 +16,7 @@ contract Owned {
 }
 
 // From Registry.sol
-contract ReversibleRegistry {
+contract ReverseRegistry {
 	event ReverseConfirmed(string indexed name, address indexed reverse);
 	event ReverseRemoved(string indexed name, address indexed reverse);
 
@@ -36,7 +36,7 @@ contract Certifier {
 	function lookupHash(address _who, string _field) constant returns (bytes32);
 }
 
-contract ProofOfEmail is Owned, Certifier, ReversibleRegistry {
+contract ProofOfEmail is Owned, Certifier, ReverseRegistry {
 	// Events.
 	event Requested(address indexed who, bytes32 emailHash);
 	event Puzzled(address indexed who, bytes32 indexed emailHash, bytes32 puzzle);
