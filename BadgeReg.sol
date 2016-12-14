@@ -32,6 +32,7 @@ contract BadgeReg is Owned {
     event Registered(bytes32 indexed name, uint indexed id, address addr);
     event Unregistered(bytes32 indexed name, uint indexed id);
     event MetaChanged(uint indexed id, bytes32 indexed key, bytes32 value);
+    event AddressChanged(uint indexed id, address addr);
 
     function register(address _addr, bytes32 _name) payable returns (bool) {
         return registerAs(_addr, _name, msg.sender);
@@ -81,6 +82,14 @@ contract BadgeReg is Owned {
 
     function meta(uint _id, bytes32 _key) constant returns (bytes32) {
         return badges[_id].meta[_key];
+    }
+
+    function setAddress(uint _id, address _newAddr) only_badge_owner(_id) when_address_free(_newAddr) {
+        var oldAddr = badges[_id].addr;
+        badges[_id].addr = _newAddr;
+        mapFromAddress[oldAddr] = 0;
+        mapFromAddress[_newAddr] = _id;
+        AddressChanged(_id, _newAddr);
     }
 
     function setMeta(uint _id, bytes32 _key, bytes32 _value) only_badge_owner(_id) {
