@@ -40,7 +40,7 @@ contract DeadMansSwitch {
         Reclaimed();
     }
 
-    function reset(address _backup) only_owner_or_backup {
+    function reset() only_owner_or_backup {
         timeout = 0;
         Reset();
     }
