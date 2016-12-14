@@ -84,7 +84,7 @@ contract BadgeReg is Owned {
         return badges[_id].meta[_key];
     }
 
-    function setAddress(uint _id, address _newAddr) only_badge_owner(_id) {
+    function setAddress(uint _id, address _newAddr) only_badge_owner(_id) when_address_free(_newAddr) {
         var oldAddr = badges[_id].addr;
         badges[_id].addr = _newAddr;
         mapFromAddress[oldAddr] = 0;
