@@ -4,6 +4,7 @@
 
 pragma solidity ^0.4.0;
 
+// From Owned.sol
 contract Owned {
 	modifier only_owner { if (msg.sender != owner) return; _; }
 
@@ -14,6 +15,7 @@ contract Owned {
 	address public owner = msg.sender;
 }
 
+// From Registry.sol
 contract ReversibleRegistry {
 	event ReverseConfirmed(string indexed name, address indexed reverse);
 	event ReverseRemoved(string indexed name, address indexed reverse);
@@ -24,6 +26,7 @@ contract ReversibleRegistry {
 	function reverse(address _data) constant returns (string);
 }
 
+// From Certifier.sol
 contract Certifier {
 	event Confirmed(address indexed reverse);
 	event Revoked(address indexed reverse);
