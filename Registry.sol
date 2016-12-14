@@ -4,144 +4,161 @@
 
 // From Owned.sol
 contract Owned {
-    modifier only_owner { if (msg.sender != owner) return; _; }
+	event NewOwner(address indexed old, address indexed current);
 
-    event NewOwner(address indexed old, address indexed current);
+	function setOwner(address _new) only_owner { NewOwner(owner, _new); owner = _new; }
 
-    function setOwner(address _new) only_owner { NewOwner(owner, _new); owner = _new; }
+	modifier only_owner { if (msg.sender != owner) return; _; }
 
-    address public owner = msg.sender;
+	address public owner = msg.sender;
 }
 
-contract RegistryInterface {
-    event Drained(uint amount);
-    event FeeChanged(uint amount);
-    event Reserved(bytes32 indexed name, address indexed owner);
-    event Transferred(bytes32 indexed name, address indexed oldOwner, address indexed newOwner);
-    event Dropped(bytes32 indexed name, address indexed owner);
-    event DataChanged(bytes32 indexed name, address indexed owner, string indexed key, string plainKey);
-    event ReverseProposed(string indexed name, address indexed reverse);
-    event ReverseConfirmed(string indexed name, address indexed reverse);
-    event ReverseRemoved(string indexed name, address indexed reverse);
+contract Registry {
+	event DataChanged(bytes32 indexed name, string indexed key, string plainKey);
 
-    function get(bytes32 _name, string _key) constant returns (bytes32);
-    function getOwner(bytes32 _name) constant returns (address);
-    function getReverse(bytes32 _name) constant returns (address);
-    function getAddress(bytes32 _name, string _key) constant returns (address);
-    function getUint(bytes32 _name, string _key) constant returns (uint);
-
-    function reverse(address _data) constant returns (string);
+	function getData(bytes32 _name, string _key) constant returns (bytes32);
+	function getAddress(bytes32 _name, string _key) constant returns (address);
+	function getUint(bytes32 _name, string _key) constant returns (uint);
 }
 
-contract Registry is Owned, RegistryInterface {
-    struct Entry {
-        address owner;
-        address reverse;
-        mapping (string => bytes32) data;
-    }
+contract OwnerRegistry {
+	event Reserved(bytes32 indexed name, address indexed owner);
+	event Transferred(bytes32 indexed name, address indexed oldOwner, address indexed newOwner);
+	event Dropped(bytes32 indexed name, address indexed owner);
 
-    event Drained(uint amount);
-    event FeeChanged(uint amount);
-    event Reserved(bytes32 indexed name, address indexed owner);
-    event Transferred(bytes32 indexed name, address indexed oldOwner, address indexed newOwner);
-    event Dropped(bytes32 indexed name, address indexed owner);
-    event DataChanged(bytes32 indexed name, address indexed owner, string indexed key, string plainKey);
-    event ReverseProposed(string indexed name, address indexed reverse);
-    event ReverseConfirmed(string indexed name, address indexed reverse);
-    event ReverseRemoved(string indexed name, address indexed reverse);
+	function getOwner(bytes32 _name) constant returns (address);
+}
 
-    modifier when_unreserved(bytes32 _name) { if (entries[_name].owner != 0) return; _; }
-    modifier only_owner_of(bytes32 _name) { if (entries[_name].owner != msg.sender) return; _; }
-    modifier when_proposed(string _name) { if (entries[sha3(_name)].reverse != msg.sender) return; _; }
-    modifier when_fee_paid { if (msg.value < fee) return; _; }
+contract ReversibleRegistry {
+	event ReverseConfirmed(string indexed name, address indexed reverse);
+	event ReverseRemoved(string indexed name, address indexed reverse);
 
-    function reserve(bytes32 _name) when_unreserved(_name) when_fee_paid returns (bool success) {
-        entries[_name].owner = msg.sender;
-        Reserved(_name, msg.sender);
-        return true;
-    }
-    function transfer(bytes32 _name, address _to) only_owner_of(_name) returns (bool success) {
-        entries[_name].owner = _to;
-        Transferred(_name, msg.sender, _to);
-        return true;
-    }
-    function drop(bytes32 _name) only_owner_of(_name) returns (bool success) {
-        delete entries[_name];
-        Dropped(_name, msg.sender);
-        return true;
-    }
+	function hasReverse(bytes32 _name) constant returns (bool);
+	function getReverse(bytes32 _name) constant returns (address);
+	function canReverse(address _data) constant returns (bool);
+	function reverse(address _data) constant returns (string);
+}
 
-    function set(bytes32 _name, string _key, bytes32 _value) only_owner_of(_name) returns (bool success) {
-        entries[_name].data[_key] = _value;
-        DataChanged(_name, msg.sender, _key, _key);
-        return true;
-    }
-    function setAddress(bytes32 _name, string _key, address _value) only_owner_of(_name) returns (bool success) {
-        entries[_name].data[_key] = bytes32(_value);
-        DataChanged(_name, msg.sender, _key, _key);
-        return true;
-    }
-    function setUint(bytes32 _name, string _key, uint _value) only_owner_of(_name) returns (bool success) {
-        entries[_name].data[_key] = bytes32(_value);
-        DataChanged(_name, msg.sender, _key, _key);
-        return true;
-    }
+contract SimpleRegistry is Owned, Registry, OwnerRegistry, ReversibleRegistry {
+	struct Entry {
+		address owner;
+		address reverse;
+		mapping (string => bytes32) data;
+	}
 
-    function reserved(bytes32 _name) constant returns (bool reserved) {
-        return entries[_name].owner != 0;
-    }
-    function get
-    (bytes32 _name, string _key) constant returns (bytes32) {
-        return entries[_name].data[_key];
-    }
-    function getOwner(bytes32 _name) constant returns (address) {
-        return entries[_name].owner;
-    }
-    function getReverse(bytes32 _name) constant returns (address) {
-        return entries[_name].reverse;
-    }
-    function getAddress(bytes32 _name, string _key) constant returns (address) {
-        return address(entries[_name].data[_key]);
-    }
-    function getUint(bytes32 _name, string _key) constant returns (uint) {
-        return uint(entries[_name].data[_key]);
-    }
+	event Reserved(bytes32 indexed name, address indexed owner);
+	event Transferred(bytes32 indexed name, address indexed oldOwner, address indexed newOwner);
+	event Dropped(bytes32 indexed name, address indexed owner);
 
-    function proposeReverse(string _name, address _who) only_owner_of(sha3(_name)) returns (bool success) {
-        var sha3Name = sha3(_name);
-        if (entries[sha3Name].reverse != 0 && sha3(reverse[entries[sha3Name].reverse]) == sha3Name) {
-            delete reverse[entries[sha3Name].reverse];
-            ReverseRemoved(_name, entries[sha3Name].reverse);
-        }
-        entries[sha3Name].reverse = _who;
-        ReverseProposed(_name, _who);
-        return true;
-    }
+	event DataChanged(bytes32 indexed name, string indexed key, string plainKey);
 
-    function confirmReverse(string _name) when_proposed(_name) returns (bool success) {
-        reverse[msg.sender] = _name;
-        ReverseConfirmed(_name, msg.sender);
-        return true;
-    }
+	event ReverseConfirmed(string indexed name, address indexed reverse);
+	event ReverseRemoved(string indexed name, address indexed reverse);
 
-    function removeReverse() {
-        ReverseRemoved(reverse[msg.sender], msg.sender);
-        delete entries[sha3(reverse[msg.sender])].reverse;
-        delete reverse[msg.sender];
-    }
+	event Drained(uint amount);
+	event FeeChanged(uint amount);
+	event ReverseProposed(string indexed name, address indexed reverse);
 
-    function setFee(uint _amount) only_owner {
-        fee = _amount;
-        FeeChanged(_amount);
-    }
+	// Registry functions.
+	function getData(bytes32 _name, string _key) constant returns (bytes32) {
+		return entries[_name].data[_key];
+	}
+	function getAddress(bytes32 _name, string _key) constant returns (address) {
+		return address(entries[_name].data[_key]);
+	}
+	function getUint(bytes32 _name, string _key) constant returns (uint) {
+		return uint(entries[_name].data[_key]);
+	}
 
-    function drain() only_owner {
-        Drained(this.balance);
-        if (!msg.sender.send(this.balance)) throw;
-    }
+	// OwnerRegistry function.
+	function getOwner(bytes32 _name) constant returns (address) { return entries[_name].owner; }
 
-    mapping (bytes32 => Entry) entries;
-    mapping (address => string) public reverse;
+	// ReversibleRegistry functions.
+	function hasReverse(bytes32 _name) constant returns (bool) { return entries[_name] != 0; }
+	function getReverse(bytes32 _name) constant returns (address) { return entries[_name].reverse; }
+	function canReverse(address _data) constant returns (bool) { return reverses[_data] != ""; }
+	function reverse(address _data) constant returns (string) { return reverses[_data]; }
 
-    uint public fee = 1 ether;
+	// Reservation functions.
+	function reserve(bytes32 _name) when_unreserved(_name) when_fee_paid returns (bool success) {
+		entries[_name].owner = msg.sender;
+		Reserved(_name, msg.sender);
+		return true;
+	}
+	function reserved(bytes32 _name) constant returns (bool reserved) {
+		return entries[_name].owner != 0;
+	}
+	function transfer(bytes32 _name, address _to) only_owner_of(_name) returns (bool success) {
+		entries[_name].owner = _to;
+		Transferred(_name, msg.sender, _to);
+		return true;
+	}
+	function drop(bytes32 _name) only_owner_of(_name) returns (bool success) {
+		delete entries[_name];
+		Dropped(_name, msg.sender);
+		return true;
+	}
+
+	// Data admin functions.
+	function setData(bytes32 _name, string _key, bytes32 _value) only_owner_of(_name) returns (bool success) {
+		entries[_name].data[_key] = _value;
+		DataChanged(_name, _key, _key);
+		return true;
+	}
+	function setAddress(bytes32 _name, string _key, address _value) only_owner_of(_name) returns (bool success) {
+		entries[_name].data[_key] = bytes32(_value);
+		DataChanged(_name, _key, _key);
+		return true;
+	}
+	function setUint(bytes32 _name, string _key, uint _value) only_owner_of(_name) returns (bool success) {
+		entries[_name].data[_key] = bytes32(_value);
+		DataChanged(_name, _key, _key);
+		return true;
+	}
+
+	// Reverse registration.
+	function proposeReverse(string _name, address _who) only_owner_of(sha3(_name)) returns (bool success) {
+		var sha3Name = sha3(_name);
+		if (entries[sha3Name].reverse != 0 && sha3(reverse[entries[sha3Name].reverse]) == sha3Name) {
+			delete reverse[entries[sha3Name].reverse];
+			ReverseRemoved(_name, entries[sha3Name].reverse);
+		}
+		entries[sha3Name].reverse = _who;
+		ReverseProposed(_name, _who);
+		return true;
+	}
+
+	function confirmReverse(string _name) when_proposed(_name) returns (bool success) {
+		reverse[msg.sender] = _name;
+		ReverseConfirmed(_name, msg.sender);
+		return true;
+	}
+
+	function removeReverse() {
+		ReverseRemoved(reverse[msg.sender], msg.sender);
+		delete entries[sha3(reverse[msg.sender])].reverse;
+		delete reverse[msg.sender];
+	}
+
+	// Admin functions for the owner.
+
+	function setFee(uint _amount) only_owner {
+		fee = _amount;
+		FeeChanged(_amount);
+	}
+
+	function drain() only_owner {
+		Drained(this.balance);
+		if (!msg.sender.send(this.balance)) throw;
+	}
+
+	modifier when_unreserved(bytes32 _name) { if (entries[_name].owner != 0) return; _; }
+	modifier only_owner_of(bytes32 _name) { if (entries[_name].owner != msg.sender) return; _; }
+	modifier when_proposed(string _name) { if (entries[sha3(_name)].reverse != msg.sender) return; _; }
+	modifier when_fee_paid { if (msg.value < fee) return; _; }
+
+	mapping (bytes32 => Entry) entries;
+	mapping (address => string) reverses;
+
+	uint public fee = 1 ether;
 }
