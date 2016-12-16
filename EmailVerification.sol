@@ -25,7 +25,7 @@ contract Certifier {
 contract ProofOfEmail is Owned, Certifier {
 	modifier when_fee_paid { if (msg.value < fee) return; _; }
 
-	event Requested(address indexed who, bytes32 emailHash);
+	event Requested(address indexed who, bytes32 indexed emailHash);
 	event Puzzled(address indexed who, bytes32 indexed emailHash, bytes32 puzzle);
 
 	function request(bytes32 _emailHash) payable when_fee_paid {
