@@ -62,7 +62,7 @@ contract Bounty
 	}
 
 	/// Add `wei(msg.value)` into the balance of `msg.sender`'s account.
-	function() {
+	function() payable {
 		Deposit(msg.sender, msg.value);
 		balance[msg.sender] += msg.value;
 	}
