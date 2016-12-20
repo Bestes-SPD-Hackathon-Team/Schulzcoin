@@ -10,14 +10,14 @@ contract Prism {
 		forked = theWithdraw.balance > 1 ether;
 	}
 
-	function transferETC(address to) {
+	function transferETC(address to) payable {
 		if (forked)
 			throw;
 		if (!to.send(msg.value))
 			throw;
 	}
 
-	function transferETH(address to) {
+	function transferETH(address to) payable {
 		if (!forked)
 			throw;
 		if (!to.send(msg.value))
