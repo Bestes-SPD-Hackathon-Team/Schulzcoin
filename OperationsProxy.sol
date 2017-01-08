@@ -94,7 +94,7 @@ contract OperationsProxy {
 	    }
 	}
 	
-	function confirm(uint8 _track, bytes32 _hash) only_confirmer_of_track(_track) {
+	function confirm(uint8 _track, bytes32 _hash) only_confirmer_of_track(_track) payable {
 	    if (!address(operations).call.value(msg.value)(waiting[_track][_hash])) throw;
 	    delete waiting[_track][_hash];
 	    RequestConfirmed(_track, _hash);
