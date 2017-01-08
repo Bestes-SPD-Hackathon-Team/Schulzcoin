@@ -45,7 +45,6 @@ contract TokenReg {
 	function fromTLA(string _tla) constant returns (uint id, address addr, uint base, string name, address owner);
 	function meta(uint _id, bytes32 _key) constant returns (bytes32);
 	function setMeta(uint _id, bytes32 _key, bytes32 _value);
-	function transferTLA(string _tla, address _to) returns (bool success);
 	function drain();
 	uint public fee;
 }
