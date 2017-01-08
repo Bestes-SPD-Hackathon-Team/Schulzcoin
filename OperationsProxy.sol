@@ -1,5 +1,4 @@
-//pragma solidity ^0.4.7;
-
+pragma solidity ^0.4.7;
 
 contract OperationsFace {
 	function proposeTransaction(bytes32 _txid, address _to, bytes _data, uint _value, uint _gas) returns (uint txSuccess);
