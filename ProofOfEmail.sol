@@ -38,10 +38,10 @@ contract Certifier {
 
 contract ProofOfEmail is Owned, Certifier, ReverseRegistry {
 	// Events.
-	event Requested(address indexed who, bytes32 emailHash);
+	event Requested(address indexed who, bytes32 indexed emailHash);
 	event Puzzled(address indexed who, bytes32 indexed emailHash, bytes32 puzzle);
 
-	// ReverseRegistry API -> We map the namespace of SHA3(e-mail address)s to a 'reverse' and 'A' address. We can't do the full 
+	// ReverseRegistry API -> We map the namespace of SHA3(e-mail address)s to a 'reverse' and 'A' address. We can't do the full
 	// reverse or issue events, since we don't have the plaintext email.
 	function getAddress(bytes32 _name, string _key) constant returns (address) { return entries[_name]; }
 	function hasReverse(bytes32 _name) constant returns (bool) { return entries[_name] != 0; }
