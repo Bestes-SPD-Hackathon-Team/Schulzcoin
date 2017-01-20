@@ -48,7 +48,7 @@ contract Receipter {
         if (!treasury.call.value(msg.value)()) throw;
         record[_recipient] += msg.value;
         total += msg.value;
-        Purchased(_recipient, msg.value);
+        Received(_recipient, msg.value);
     }
 
 	/// Halt the contribution period. Any attempt at contributing will fail.
