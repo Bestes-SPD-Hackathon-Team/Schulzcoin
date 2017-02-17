@@ -86,3 +86,32 @@ contract Receipter {
     mapping (address => uint) public record;
     uint public total = 0;
 }
+
+contract SignedReceipter is Receipter {
+    function Receipter(address _admin, address _treasury, uint _beginBlock, uint _endBlock, bytes32 _sigHash) {
+        admin = _admin;
+        treasury = _treasury;
+        beginBlock = _beginBlock;
+        endBlock = _endBlock;
+        sigHash = _sigHash;
+    }
+
+    modifier when_signed(address who, uint8 v, bytes32 r, bytes32 s) { if (ecrecover(sigHash, v, r, s) != who) throw; _; }
+
+    function() payable { throw; }
+
+    /// Fallback function: receive a contribution from sender.
+    function receive(uint8 v, bytes32 r, bytes32 s) payable {
+        receiveFrom(msg.sender, v, r, s);
+    }
+
+	/// Receive a contribution from `_recipient`.
+    function receiveFrom(address _source, uint8 v, bytes32 r, bytes32 s) payable only_during_period is_not_dust when_signed(_source, v, r, s) {
+        if (!treasury.call.value(msg.value)()) throw;
+        record[_source] += msg.value;
+        total += msg.value;
+        Received(_source, msg.value);
+    }
+
+    bytes32 sigHash;
+}
