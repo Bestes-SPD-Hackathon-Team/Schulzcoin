@@ -80,7 +80,7 @@ contract DappReg is Owned {
 	}
 
 	// add apps
-	function register(bytes32 _id) when_fee_paid when_id_free(_id) {
+	function register(bytes32 _id) payable when_fee_paid when_id_free(_id) {
 		ids.push(_id);
 		dapps[_id] = Dapp(_id, msg.sender);
 		Registered(_id, msg.sender);
