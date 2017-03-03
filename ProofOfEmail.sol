@@ -22,8 +22,8 @@ contract ReverseRegistry {
 
 	function hasReverse(bytes32 _name) constant returns (bool);
 	function getReverse(bytes32 _name) constant returns (address);
-	function canReverse(address _data) constant returns (bool);
-	function reverse(address _data) constant returns (string);
+	function canReverse(address _data) constant returns (bool) {}
+	function reverse(address _data) constant returns (string) {}
 }
 
 // From Certifier.sol
@@ -32,7 +32,7 @@ contract Certifier {
 	event Revoked(address indexed reverse);
 
 	function certified(address _who) constant returns (bool);
-	function lookup(address _who, string _field) constant returns (string);
+	function lookup(address _who, string _field) constant returns (string) {}
 	function lookupHash(address _who, string _field) constant returns (bytes32);
 }
 
