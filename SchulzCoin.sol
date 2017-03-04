@@ -1,4 +1,5 @@
-//! BasicCoin ECR20-compliant token contract
+//! SchulzCoin implementation at #SPDhack
+//! Based on ECR20-compliant token contract
 //! By Parity Team (Ethcore), 2016.
 //! Released under the Apache Licence 2.
 
@@ -49,8 +50,8 @@ contract TokenReg {
 	uint public fee;
 }
 
-// BasicCoin, ECR20 tokens that all belong to the owner for sending around
-contract BasicCoin is Owned, Token {
+// SchulzCoin, ECR20 tokens that all belong to the owner for sending around
+contract SchulzCoin is Owned, Token {
 	// this is as basic as can be, only the associated balance & allowances
 	struct Account {
 		uint balance;
@@ -91,7 +92,7 @@ contract BasicCoin is Owned, Token {
 	mapping (address => Account) accounts;
 
 	// constructor sets the parameters of execution, _totalSupply is all units
-	function BasicCoin(uint _totalSupply, address _owner) when_no_eth when_non_zero(_totalSupply) {
+	function SchulzCoin(uint _totalSupply, address _owner) when_no_eth when_non_zero(_totalSupply) {
 		totalSupply = _totalSupply;
 		owner = _owner;
 		accounts[_owner].balance = totalSupply;
@@ -140,25 +141,25 @@ contract BasicCoin is Owned, Token {
 	}
 }
 
-// Manages BasicCoin instances, including the deployment & registration
-contract BasicCoinManager is Owned {
-	// a structure wrapping a deployed BasicCoin
+// Manages SchulzCoin instances, including the deployment & registration
+contract SchulzCoinManager is Owned {
+	// a structure wrapping a deployed SchulzCoin
 	struct Coin {
 		address coin;
 		address owner;
 		address tokenreg;
 	}
 
-	// a new BasicCoin has been deployed
+	// a new SchulzCoin has been deployed
 	event Created(address indexed owner, address indexed tokenreg, address indexed coin);
 
-	// a list of all the deployed BasicCoins
+	// a list of all the deployed SchulzCoins
 	Coin[] coins;
 
-	// all BasicCoins for a specific owner
+	// all SchulzCoins for a specific owner
 	mapping (address => uint[]) ownedCoins;
 
-	// the base, tokens denoted in micros (matches up with BasicCoin interface above)
+	// the base, tokens denoted in micros (matches up with SchulzCoin interface above)
 	uint constant public base = 1000000;
 
 	// return the number of deployed
@@ -185,10 +186,10 @@ contract BasicCoinManager is Owned {
 		return get(ownedCoins[_owner][_index]);
 	}
 
-	// deploy a new BasicCoin on the blockchain
+	// deploy a new SchulzCoin on the blockchain
 	function deploy(uint _totalSupply, string _tla, string _name, address _tokenreg) payable returns (bool) {
 		TokenReg tokenreg = TokenReg(_tokenreg);
-		BasicCoin coin = new BasicCoin(_totalSupply, msg.sender);
+		SchulzCoin coin = new SchulzCoin(_totalSupply, msg.sender);
 
 		uint ownerCount = countByOwner(msg.sender);
 		uint fee = tokenreg.fee();
